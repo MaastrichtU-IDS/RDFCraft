@@ -137,13 +137,15 @@ app.include_router(
     tags=["rml"],
 )
 
-if not DEBUG:
-    # Serve the React app
-    current_dir = Path(__file__).parent.parent
-    build_dir = current_dir / "public"
+current_dir = Path(__file__).parent.parent
+build_dir = current_dir / "public"
 
+if build_dir.exists():
     app.mount(
         "/",
         StaticFiles(directory=build_dir, html=True),
         name="static",
     )
+
+else:
+    logger.warning(f"Build directory {build_dir} does not exist")

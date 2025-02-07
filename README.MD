@@ -52,6 +52,22 @@ compressed. Run the executable and you are good to go.
 > More information about gatekeeper can be found
 > [here](https://support.apple.com/en-us/HT202491).
 
+### With Docker 🐳
+
+You can also run RDFCraft using Docker. Just run the following command:
+
+For Linux/Mac:
+
+```bash
+docker run -p 8080:8080 -v $(HOME)/rdfcraft:/home/app/rdfcraft ghcr.io/maastrichtu-ids/rdfcraft:latest
+```
+
+For Windows:
+
+```bash
+docker run -p 8080:8080 -v %USERPROFILE%/rdfcraft:/home/app/rdfcraft ghcr.io/maastrichtu-ids/rdfcraft:latest
+```
+
 ## Getting Started 🚦
 
 You can find a detailed guide on how to use RDFCraft in the
