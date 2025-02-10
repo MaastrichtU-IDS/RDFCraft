@@ -63,7 +63,10 @@ const CreateWorkspaceDialog = ({
     if (!form_ref.current) return;
     setError(null);
 
-    const { workspace_name, type, remote_connection_string, description } =
+    // const { workspace_name, type, remote_connection_string, description } =
+    //   form_ref.current;
+
+    const { workspace_name, remote_connection_string, description } =
       form_ref.current;
 
     if (!workspace_name.value) {
@@ -74,10 +77,10 @@ const CreateWorkspaceDialog = ({
     //   setError('Type is required');
     //   return;
     // }
-    if (type.value === 'remote' && !remote_connection_string.value) {
-      setError('Remote Connection String is required');
-      return;
-    }
+    // if (type.value === 'remote' && !remote_connection_string.value) {
+    //   setError('Remote Connection String is required');
+    //   return;
+    // }
 
     const data: CreateWorkspaceMetadata = {
       name: workspace_name.value,
