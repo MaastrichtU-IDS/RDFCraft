@@ -120,6 +120,9 @@ const WorkspacesPage = () => {
             <Button icon='import' onClick={handleImport}>
               Import Workspace
             </Button>
+            <Button icon='cog' onClick={() => navigate('/settings')}>
+              Settings
+            </Button>
           </ButtonGroup>
         </Navbar.Group>
       </Navbar>

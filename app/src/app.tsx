@@ -9,6 +9,7 @@ import MappingPage from './pages/mapping_page';
 import OntologiesPage from './pages/ontologies_page';
 import PrefixPage from './pages/prefixes_page';
 import WorkspacePage from './pages/workspace_page';
+import SettingsPage from '@/pages/settings_page';
 
 const router = createBrowserRouter([
   {
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
     path: '/workspaces/:uuid/ontologies/:ontology_uuid',
     element: <OntologyPage />,
   },
+  {
+    path: '/settings',
+    element: <SettingsPage />,
+  }
 ]);
 
 const App = () => {

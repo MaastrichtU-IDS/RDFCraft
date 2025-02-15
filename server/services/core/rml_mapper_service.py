@@ -52,18 +52,17 @@ class RMLMapperService(RMLMapperServiceProtocol):
                     stderr=subprocess.PIPE,
                 )
                 self.java_path = "java"
-            except FileNotFoundError:
-                self.logger.error(
-                    "Java not found, RML mappings will not be able to be executed"
-                )
+            except subprocess.CalledProcessError:
+                self.logger.error("Java not found, RML mappings will not be executed")
+                return
+            except OSError:
+                self.logger.error("Java not found, RML mappings will not be executed")
                 return
 
         self.logger.info(f"Java found at {self.java_path}, checking for mapper")
 
         if not self.mapper_bin.exists():
-            self.logger.error(
-                "Mapper not found, RML mappings will not be able to be executed"
-            )
+            self.logger.error("Mapper not found, RML mappings will not be executed")
 
         self.logger.info("RMLMapperService instantiated")
 
@@ -85,20 +84,28 @@ class RMLMapperService(RMLMapperServiceProtocol):
 
         self.logger.info(f"Executing command: {cmd_rml}")
 
-        result = subprocess.run(
-            cmd_rml,
-            shell=True,
-            capture_output=True,
-            text=True,
-        )
-
-        if result.returncode != 0:
-            self.logger.error(f"Error executing RML mapping: {result.stderr}")
-            raise ServerException(
-                f"Error executing RML mapping: {result.stderr}",
-                ErrCodes.RML_MAPPING_EXECUTION_ERROR,
+        try:
+            result = subprocess.run(
+                cmd_rml,
+                shell=True,
+                capture_output=True,
+                text=True,
             )
 
-        self.logger.info("RML mapping executed successfully")
+            if result.returncode != 0:
+                self.logger.error(f"Error executing RML mapping: {result.stderr}")
+                raise ServerException(
+                    f"Error executing RML mapping: {result.stderr}",
+                    ErrCodes.RML_MAPPING_EXECUTION_ERROR,
+                )
 
-        return rdf_output_file.read_text()
+            self.logger.info("RML mapping executed successfully")
+
+            return rdf_output_file.read_text()
+
+        except Exception as e:
+            self.logger.error(f"Error executing RML mapping: {e}")
+            raise ServerException(
+                f"Error executing RML mapping: {e}",
+                ErrCodes.RML_MAPPING_EXECUTION_ERROR,
+            )

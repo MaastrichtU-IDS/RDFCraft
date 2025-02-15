@@ -1,0 +1,28 @@
+@use '@blueprintjs/core/lib/scss/variables' as *;
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
+.settings-page-content {
+  margin-top: $pt-navbar-height;
+  align-self: center;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  overflow-x: hidden;
+  height: calc(100vh - #{$pt-navbar-height});
+}
+
+.settings-list {
+  width: 70vw;
+  margin: auto;
+
+  .bp5-button {
+    width: min(100%, 200px);
+    justify-content: center;
+  }
+}

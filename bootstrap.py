@@ -34,12 +34,12 @@ async def bootstrap():
         Path(str_application_directory)
         if str_application_directory
         else Path.home() / "./rdfcraft"
-    )
+    ).absolute()
     if not di["APP_DIR"].exists():
         di["APP_DIR"].mkdir()
     logger.info(f"Application directory set to {di['APP_DIR']}")
 
-    di["TEMP_DIR"] = di["APP_DIR"] / "temp"
+    di["TEMP_DIR"] = (di["APP_DIR"] / "temp").absolute()
 
     if not di["TEMP_DIR"].exists():
         di["TEMP_DIR"].mkdir()
@@ -61,6 +61,12 @@ async def bootstrap():
     di[ConfigServiceProtocol].set("system", di["SYSTEM"])
     di[ConfigServiceProtocol].set("arch", di["ARCH"])
     di[ConfigServiceProtocol].set("app_dir", str(di["APP_DIR"]))
+    java_memory = di[ConfigServiceProtocol].get("java_memory")
+    if not java_memory:
+        di[ConfigServiceProtocol].set("java_memory", "2G")
+    java_path = di[ConfigServiceProtocol].get("java_path")
+    if not java_path:
+        di[ConfigServiceProtocol].set("java_path", "java")
 
     logger.info("Environment variables loaded")
 

@@ -18,6 +18,7 @@ from uvicorn.protocols.utils import (
 
 from bootstrap import bootstrap, teardown
 from server.routers.rml.rml import router as rml_router
+from server.routers.settings.settings import router as settings_router
 from server.routers.sources.sources import (
     router as sources_router,
 )
@@ -135,6 +136,11 @@ app.include_router(
     rml_router,
     prefix="/api/rml",
     tags=["rml"],
+)
+app.include_router(
+    settings_router,
+    prefix="/api/settings",
+    tags=["settings"],
 )
 
 current_dir = Path(__file__).parent.parent
