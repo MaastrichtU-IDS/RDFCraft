@@ -1,3 +1,4 @@
+import AIPanel from '@/pages/mapping_page/components/SidePanel/components/AIPanel';
 import ProblemsPanel from '@/pages/mapping_page/components/SidePanel/components/ProblemsPanel';
 import SearchPanel from '@/pages/mapping_page/components/SidePanel/components/SearchPanel';
 import SourcePanel from '@/pages/mapping_page/components/SidePanel/components/SourcePanel';
@@ -12,7 +13,7 @@ const SidePanel = () => {
       case 'properties':
         return <NodeProperties />;
       case 'ai':
-        return <div>AI Panel Content</div>;
+        return <AIPanel />;
       case 'references':
         return <SourcePanel />;
       case 'search':
@@ -33,6 +34,7 @@ const SidePanel = () => {
           position: 'relative',
           // closer to bp5 dark theme
           background: '#182026',
+          padding: '10px',
         }}
       >
         {panelContent()}

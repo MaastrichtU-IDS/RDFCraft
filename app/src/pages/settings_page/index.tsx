@@ -15,6 +15,7 @@ const SettingsPage = () => {
   const error = useSettingsPageState(state => state.error);
   const openai_url = useSettingsPageState(state => state.openai_url);
   const openai_key = useSettingsPageState(state => state.openai_key);
+  const openai_model = useSettingsPageState(state => state.openai_model);
   const java_memory = useSettingsPageState(state => state.java_memory);
   const java_path = useSettingsPageState(state => state.java_path);
   const system = useSettingsPageState(state => state.system);
@@ -22,6 +23,9 @@ const SettingsPage = () => {
   const app_directory = useSettingsPageState(state => state.app_directory);
   const updateOpenaiUrl = useSettingsPageState(state => state.updateOpenaiUrl);
   const updateOpenaiKey = useSettingsPageState(state => state.updateOpenaiKey);
+  const updateOpenaiModel = useSettingsPageState(
+    state => state.updateOpenaiModel,
+  );
   const updateJavaMemory = useSettingsPageState(
     state => state.updateJavaMemory,
   );
@@ -41,7 +45,12 @@ const SettingsPage = () => {
   );
 
   const [editAction, setEditAction] = useState<
-    'openai_url' | 'openai_key' | 'java_memory' | 'java_path' | null
+    | 'openai_url'
+    | 'openai_key'
+    | 'openai_model'
+    | 'java_memory'
+    | 'java_path'
+    | null
   >(null);
 
   const handleDeleteAction = useCallback(() => {
@@ -81,6 +90,8 @@ const SettingsPage = () => {
         return 'Edit OpenAI URL';
       case 'openai_key':
         return 'Edit OpenAI Key';
+      case 'openai_model':
+        return 'Edit OpenAI Model';
       case 'java_memory':
         return 'Edit Java Memory';
       case 'java_path':
@@ -95,6 +106,8 @@ const SettingsPage = () => {
         return 'OpenAI URL';
       case 'openai_key':
         return 'OpenAI Key';
+      case 'openai_model':
+        return 'OpenAI Model';
       case 'java_memory':
         return 'Java Memory';
       case 'java_path':
@@ -109,13 +122,22 @@ const SettingsPage = () => {
         return openai_url;
       case 'openai_key':
         return openai_key;
+      case 'openai_model':
+        return openai_model;
       case 'java_memory':
         return java_memory;
       case 'java_path':
         return java_path;
     }
     return '';
-  }, [editAction, java_memory, java_path, openai_key, openai_url]);
+  }, [
+    editAction,
+    java_memory,
+    java_path,
+    openai_key,
+    openai_model,
+    openai_url,
+  ]);
 
   const handleEditAction = useCallback(
     (value: string) => {
@@ -125,6 +147,9 @@ const SettingsPage = () => {
           break;
         case 'openai_key':
           updateOpenaiKey(value);
+          break;
+        case 'openai_model':
+          updateOpenaiModel(value);
           break;
         case 'java_memory':
           updateJavaMemory(value);
@@ -205,6 +230,21 @@ const SettingsPage = () => {
               icon='edit'
               onClick={() => {
                 setEditAction('openai_key');
+                setOpen('edit');
+              }}
+            >
+              Edit
+            </Button>
+          </Card>
+          <Card style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>
+              <h2>OpenAI Model</h2>
+              <p>{openai_model ?? 'Not Defined'}</p>
+            </span>
+            <Button
+              icon='edit'
+              onClick={() => {
+                setEditAction('openai_model');
                 setOpen('edit');
               }}
             >

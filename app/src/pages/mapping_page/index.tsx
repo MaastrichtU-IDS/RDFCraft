@@ -1,5 +1,6 @@
 import toast from '@/consts/toast';
 import MappingDialog from '@/pages/mapping_page/components/MappingDialog';
+import useAIPanel from '@/pages/mapping_page/components/SidePanel/components/AIPanel/state';
 import { ReactFlowProvider } from '@xyflow/react';
 import { languages } from 'monaco-editor';
 import { useEffect, useRef, useState } from 'react';
@@ -42,6 +43,7 @@ const MappingPage = () => {
   const setSelectedTab = useMappingPage(state => state.setSelectedTab);
   const setIsCollapsed = useMappingPage(state => state.setIsSidePanelCollapsed);
   const completeMapping = useMappingPage(state => state.completeMapping);
+  const clearAIState = useAIPanel(state => state.clear);
 
   const [openDialog, setOpenDialog] = useState<'complete_mapping' | null>(null);
   useRegisterTheme('mapping-theme', mapping_theme);
@@ -83,6 +85,12 @@ const MappingPage = () => {
   ]);
 
   const sidePanelHandle = useRef<ImperativePanelHandle>(null);
+
+  useEffect(() => {
+    return () => {
+      clearAIState();
+    };
+  }, [clearAIState]);
 
   useEffect(() => {
     if (sidePanelHandle.current) {

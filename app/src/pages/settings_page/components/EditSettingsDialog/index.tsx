@@ -36,7 +36,8 @@ const EditSettingsDialog = (props: EditSettingsDialog) => {
       setError('Please fill all fields');
       return;
     }
-    props.onConfirm(form_ref.current.value);
+    props.onConfirm(form_ref.current.value.value);
+    onClose();
   };
 
   return (
@@ -59,7 +60,7 @@ const EditSettingsDialog = (props: EditSettingsDialog) => {
             labelInfo='(required)'
           >
             <InputGroup
-              id={props.value_name}
+              id='value'
               name={props.value_name}
               defaultValue={props.value}
               required

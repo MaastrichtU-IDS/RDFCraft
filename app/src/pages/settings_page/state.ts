@@ -8,6 +8,7 @@ interface SettingsPageState {
   error: string | null;
   openai_url: string | null;
   openai_key: string | null;
+  openai_model: string | null;
   java_memory: string | null;
   java_path: string | null;
   system: string | null;
@@ -19,6 +20,7 @@ interface SettingsPageStateActions {
   refreshSettings: () => void;
   updateOpenaiUrl: (openai_url: string) => void;
   updateOpenaiKey: (openai_key: string) => void;
+  updateOpenaiModel: (openai_model: string) => void;
   updateJavaMemory: (java_memory: string) => void;
   updateJavaPath: (java_path: string) => void;
   clearTempFolder: () => void;
@@ -30,6 +32,7 @@ const defaultState: SettingsPageState = {
   error: null,
   openai_url: null,
   openai_key: null,
+  openai_model: null,
   java_memory: null,
   java_path: null,
   system: null,
@@ -47,6 +50,7 @@ const functions: ZustandActions<SettingsPageStateActions, SettingsPageState> = (
     const allPromises = [
       SettingsApi.getOpenAIKey(),
       SettingsApi.getOpenAIURL(),
+      SettingsApi.getOpenAIModel(),
       SettingsApi.getJavaMemory(),
       SettingsApi.getJavaPath(),
       SettingsApi.getSystem(),
@@ -58,6 +62,7 @@ const functions: ZustandActions<SettingsPageStateActions, SettingsPageState> = (
       .then(([
         openai_key,
         openai_url,
+        openai_model,
         java_memory,
         java_path,
         system,
@@ -67,6 +72,7 @@ const functions: ZustandActions<SettingsPageStateActions, SettingsPageState> = (
         set({
           openai_key: openai_key == '' ? null : openai_key,
           openai_url: openai_url == '' ? null : openai_url,
+          openai_model: openai_model == '' ? null : openai_model,
           java_memory,
           java_path,
           system,
@@ -92,6 +98,14 @@ const functions: ZustandActions<SettingsPageStateActions, SettingsPageState> = (
     set({ isLoading: 'Updating OpenAI Key...' });
     SettingsApi.updateOpenAIKey(openai_key).then(() => {
       set({ openai_key, isLoading: null });
+    }).catch((error) => {
+      set({ error: error.message, isLoading: null });
+    });
+  },
+  updateOpenaiModel(openai_model) {
+    set({ isLoading: 'Updating OpenAI Model...' });
+    SettingsApi.updateOpenAIModel(openai_model).then(() => {
+      set({ openai_model, isLoading: null });
     }).catch((error) => {
       set({ error: error.message, isLoading: null });
     });

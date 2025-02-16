@@ -45,6 +45,26 @@ class SettingsApi {
     );
   }
 
+  public static async getOpenAIModel(): Promise<string> {
+    const result = await this.getApiClient().callApi<string, string>(
+      `/settings/openai-model`,
+      {
+        method: 'GET',
+        parser(data) {
+          return data as string;
+        },
+      },
+    );
+
+    if (result.type === 'success') {
+      return result.data;
+    }
+
+    throw new Error(
+      `Failed to get OpenAI Model: ${result.message} (status: ${result.status})`,
+    );
+  }
+
   public static async getJavaMemory(): Promise<string> {
     const result = await this.getApiClient().callApi<string, string>(
       `/settings/java-memory`,
@@ -90,7 +110,7 @@ class SettingsApi {
       `/settings/openai-url`,
       {
         method: 'PUT',
-        body: openai_url,
+        queryParams: { openai_url },
         parser: () => true,
       },
     );
@@ -109,7 +129,7 @@ class SettingsApi {
       `/settings/openai-key`,
       {
         method: 'PUT',
-        body: openai_key,
+        queryParams: { openai_key },
         parser: () => true,
       },
     );
@@ -123,12 +143,31 @@ class SettingsApi {
     );
   }
 
+  public static async updateOpenAIModel(openai_model: string): Promise<boolean> {
+    const result = await this.getApiClient().callApi<boolean>(
+      `/settings/openai-model`,
+      {
+        method: 'PUT',
+        queryParams: { openai_model },
+        parser: () => true,
+      },
+    );
+
+    if (result.type === 'success') {
+      return result.data;
+    }
+
+    throw new Error(
+      `Failed to update OpenAI Model: ${result.message} (status: ${result.status})`,
+    );
+  }
+
   public static async updateJavaMemory(java_memory: string): Promise<boolean> {
     const result = await this.getApiClient().callApi<boolean>(
       `/settings/java-memory`,
       {
         method: 'PUT',
-        body: java_memory,
+        queryParams: { java_memory },
         parser: () => true,
       },
     );
@@ -147,7 +186,7 @@ class SettingsApi {
       `/settings/java-path`,
       {
         method: 'PUT',
-        body: java_path,
+        queryParams: { java_path },
         parser: () => true,
       },
     );

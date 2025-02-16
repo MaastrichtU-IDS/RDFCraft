@@ -41,6 +41,17 @@ async def set_openai_key(openai_key: str, config_service: ConfigServiceDep):
     return {"message": "OpenAI key updated"}
 
 
+@router.get("/openai-model")
+async def get_openai_model(config_service: ConfigServiceDep):
+    return config_service.get("openai_model") or ""
+
+
+@router.put("/openai-model")
+async def set_openai_model(openai_model: str, config_service: ConfigServiceDep):
+    config_service.set("openai_model", openai_model)
+    return {"message": "OpenAI model updated"}
+
+
 @router.get("/java-memory")
 async def get_java_memory(config_service: ConfigServiceDep):
     return config_service.get("java_memory")
