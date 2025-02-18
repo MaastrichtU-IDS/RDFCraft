@@ -8,5 +8,5 @@
     - [Prefixes](/guide/prefixes.md)
     - [Mappings and Sources](/guide/mappings.md)
     - [Mapping Interface](/guide/mapping-interface.md)
-    - [Generating mappings](/guide/generating-mappings.md)
+    - [Generating Mappings](/guide/generating-mappings.md)
   - [Development](/#Development-🛠)

@@ -76,4 +76,4 @@ $.people[*]
 This JSON Path will lead to the array of objects in the JSON file.
 
 [Previous: Ontologies](/guide/prefixes.md) |
-[Next: Mapping Interface](/guide/mapping-interface.md) []: # (end)
+[Next: Mapping Interface](/guide/mapping-interface.md)

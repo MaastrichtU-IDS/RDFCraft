@@ -130,3 +130,6 @@ data.
 
 You can check which references you have used in the mapping by clicking on the
 **References** tab. (WIP)
+
+[Previous: Mappings](/guide/mappings.md) |
+[Next: Generating Mappings](/guide/generating-mappings.md)
