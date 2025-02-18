@@ -1,23 +1,22 @@
 # Mappings and Sources
 
-RDFCraft only supports one source per mapping. This means that you can only use
-one source file per mapping. However, you can create multiple mappings.
+RDFCraft only supports a single source file per mapping. However, you can create multiple mappings in a designated workspace and draw connections between manually.
 
 > [!Note]
 >
-> We are well aware that this is an arbitrary limitation that we enforced. The
-> reasons why we did this are:
+> We have enforced this is an arbitrary limitation for the
+> following reasons:
 >
 > - We wanted to keep the mapping interface simple and easy to use.
 > - We wanted to keep the mapping process as simple as possible.
-> - Lastly, in our use cases, we observed that many RML engines struggles/takes
+> - In our use cases, we observed that many RML engines struggles/takes
 >   a long time to process multiple sources. Usually it is much faster to create
 >   the connection manually.
 
 ## Creating a mapping
 
-To create a mapping, after you open your workspace, click on the **Create New
-Mapping** button on the right top corner of the screen. You will be prompted to
+After you open your workspace, click on the **Create New Mapping** button 
+on the right top corner of the screen to create a mapping. You will be prompted to
 enter the details of the mapping.
 
 ![Empty Workspace](imgs/empty-workspace.png)
@@ -33,7 +32,7 @@ enter the details of the mapping.
   required for CSV files. You can use the
   [JSON Path Tester](https://jsonpath.com/) to test your JSON Path. Also at the
   end of this page, you can find examples of JSON Path.
-- **File**: The file path of the source file.
+- **File**: The path of the source. You can browse your computer for the appropriate file.
 
 After you enter the details, click on the **Create** button to create the
 mapping.
@@ -48,7 +47,7 @@ If the array you would like to map is at the root of the JSON file, you can use
 $.
 ```
 
-bn the JSON Path field.
+on the JSON Path field.
 
 If the array you would like to map is nested inside an object, like the
 following JSON:

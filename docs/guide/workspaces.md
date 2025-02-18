@@ -17,8 +17,7 @@ After that, you will need to fill in the details for your workspace.
 
 > [!Warning]
 >
-> For now, select **Local** as the workspace type. Remote workspaces are not yet
-> supported.
+> For now, select **Local** as the workspace type. Remote workspaces are WIP.
 
 After you have filled in the details, click on the **Create** button. Your new
 workspace will be created and you can click **Open** to start working on it.

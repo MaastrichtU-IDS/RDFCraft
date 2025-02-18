@@ -1,39 +1,38 @@
 # Mapping Interface
 
-Now that you have created a workspace, imported the ontologies you need, and
+Now that you have created a workspace, imported the ontologies you need,
 added prefixes you will use, and created a mapping, you can start mapping your
 data. Simply click on the **Open** button on the mapping you want to work on.
 
 ![Empty Mapping](imgs/empty-mapping.png)
 
-You will see a screen like the one above. This is the mapping interface.
+You will see the above screen. This is the mapping interface.
 
 - The red box is the **Tabs** section. You can switch between different tabs
-  using this section. The tabs are:
+  using this section. From top to bottom, the tabs are:
 
-  - **Entity Properties**: This tab shows the properties of selected entity. Via
-    this tab, you can add classes, properties to entity. Change its label and
-    define its URI Pattern.
-  - **AI**: This tab shows the AI recommendations for the mapping. You can
-    accept or reject the recommendations. (Work in progress)
-  - **Search**: This tab allows you to search the entities in you mapping.
-  - **Problems**: This tab shows the problems in your mapping. You can click on
+  - **Entity Properties**: Shows the properties of selected entity. You can add classes, properties to entity. 
+    Change its label and define its URI Pattern.
+  - **AI**: Shows the AI recommendations for the mapping. You can
+    accept or reject the recommendations. (WIP)
+  - **Search**: Allows you to search the entities in you mapping.
+  - **Problems**: Shows the problems in your mapping. You can click on
     the problem to see the details.
-  - **References**: This tab shows the references (column names/keys) in your
+  - **References**: Shows the references (column names/keys) in your
     source file.
 
 - The green box is Side Panel. This panel is collapsible and its width can be
-  adjusted. It shows the tab selected in the red box.
+  adjusted. It projects the selected tab from the red box.
 
-- In the middle where it says **Mapping Canvas**, is where you will do the
+- In the middle where it says **Mapping Canvas**, is where you will do your
   actual mapping. You can **Right Click** on the canvas to add a new node,
   literal or URI Reference.
 
-- The blue box is the **Mapping Toolbar**. This toolbar contains the buttons:
+- The blue box is the **Mapping Toolbar**. From top to bottom, the buttons are:
 
   - **Zoom In**
   - **Zoom Out**
-  - **Fit to Screen**: It fits the mapping canvas to the screen.
+  - **Fit to Screen**: Adjusts mapping canvas to the screen dimensions.
   - **Lock/Unlock**: It disables/enables the ability drag and drop entities on
     the canvas.
   - **Delete**: It deletes the selected entity.
@@ -55,14 +54,13 @@ You will see a screen like the one above. This is the mapping interface.
 ## Creating Nodes
 
 To create a node, right click on the canvas and select **Create Node**. It will
-create a new Node in the canvas.
+place a Node on the canvas.
 
 ![Create Node](imgs/create-node.png)
 
 ![Mapping-1](imgs/mapping-01.png)
 
-After you create a node, you can click on the node to see the properties of the
-node on the **Node Properties** panel.
+After its creation, you can click on the node to see its properties on the **Node Properties** panel.
 
 ![Node Properties For Entities](imgs/node-properties.png)
 
@@ -88,7 +86,7 @@ node on the **Node Properties** panel.
 
 - **URI Pattern**: The URI pattern of the node. URI patterns are used to
   generate unique URIs for unique entities. This field supports auto complete
-  and you can access it using `Ctrl + Space` (or `Cmd + Space` on Mac).
+  and you can access it by pressing `Ctrl + Space` (or `Cmd + Space` on Mac).
 
   You can use the prefixes you have added in the workspace in the URI pattern.
   You can use references (column names/keys) in the source file in the URI with
@@ -105,8 +103,8 @@ node on the **Node Properties** panel.
 
 ![Mapping-5](imgs/mapping-05.png)
 
-After you have added the classes, properties, and URI pattern, you should have a
-node like this:
+After you have added the classes, properties, and URI pattern, your node should 
+resemble the following:
 
 ![Mapping-6](imgs/mapping-06.png)
 
@@ -127,8 +125,8 @@ You can again click on the newly created node to see and edit its properties.
 
 ![Mapping-9](imgs/mapping-09.png)
 
-You can continue creating nodes and connections until you have mapped all your
+You can continue creating nodes and connections until you have mapped all desired
 data.
 
 You can check which references you have used in the mapping by clicking on the
-**References** tab. (Work in progress)
+**References** tab. (WIP)

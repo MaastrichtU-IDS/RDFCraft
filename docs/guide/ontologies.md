@@ -1,16 +1,16 @@
 # Ontologies
 
-RDFCraft is capable of indexing and using ontologies to provide a better user
+RDFCraft is capable of indexing and using multiple ontologies to provide a better user
 experience. It indexes all the classes and properties from the provided ontology
 and provides recommendations while mapping.
 
-You can totally map your data without using any ontology, but using an ontology
+You can map your entire data without using any ontology, but using an ontology
 will make the mapping process easier and more accurate.
 
 ## Adding an ontology
 
 To add an ontology, after you open your workspace, click on the **Ontologies**
-tab on the right top corner of the screen. You will see a list of all the
+tab on the top right corner of the screen. You will see a list of all the
 ontologies that is imported in the workspace.
 
 ![Empty Workspace](imgs/empty-workspace.png)
@@ -34,7 +34,7 @@ used for display/metadata purposes.
 ![Ontology Added](imgs/added-ontology.png)
 
 After you add the ontology, you can see all the classes, properties, and
-individuals indexed from the ontology by clicking **Details**.
+individuals indexed from it by clicking **Details**.
 
 ![FOAF Details](imgs/foaf-detail.png)
 
