@@ -18,10 +18,8 @@ FROM ghcr.io/astral-sh/uv:python3.11-alpine
 
 # Install JRE and curl
 
-RUN apk add --no-cache openjdk11-jre && \
+RUN apk add --no-cache openjdk17-jdk && \
     addgroup -S app && adduser -S app -G app
-
-USER app
 
 ENV DEBUG=1
 
@@ -30,6 +28,9 @@ WORKDIR /app
 # Download RMLMapper
 
 ADD https://github.com/RMLio/rmlmapper-java/releases/download/v7.2.0/rmlmapper-7.2.0-r374-all.jar ./bin/mapper.jar
+
+# Modify the permissions of RMLMapper
+RUN chmod 755 bin/mapper.jar
 
 # Copy the backend dependencies
 
