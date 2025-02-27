@@ -1,0 +1,17 @@
+.uri-node .custom-drag-handle,
+.entity-node .custom-drag-handle,
+.literal-node .custom-drag-handle {
+    background-color: rgba(0, 0, 200, .3);
+    height: 20px;
+    margin: 0;
+    width: 100%;
+    cursor: grab;
+}
+
+.uri-node .custom-drag-handle {
+    background-color: rgba(0, 200, 0, .3);
+}
+
+.entity-node .custom-drag-handle {
+    background-color: rgba(200, 0, 0, .3);
+}

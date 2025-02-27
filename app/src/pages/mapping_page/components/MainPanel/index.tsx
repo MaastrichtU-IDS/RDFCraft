@@ -166,6 +166,7 @@ const MainPanel = ({ initialGraph }: MainPanelProps) => {
         },
         position: position,
         type: 'entity',
+        selected: true,
       } as EntityNodeType;
       setNodes(nodes => [...nodes, newNode]);
       setNewNode(newNode);
@@ -190,6 +191,7 @@ const MainPanel = ({ initialGraph }: MainPanelProps) => {
         },
         position: position,
         type: 'uri_ref',
+        selected: true,
       } as URIRefNodeType;
       setNodes(nodes => [...nodes, newNode]);
       setNewNode(newNode);
@@ -216,6 +218,7 @@ const MainPanel = ({ initialGraph }: MainPanelProps) => {
         },
         position: position,
         type: 'literal',
+        selected: true,
       } as LiteralNodeType;
       setNodes(nodes => [...nodes, newNode]);
       setNewNode(newNode);

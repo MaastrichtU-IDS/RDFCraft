@@ -125,6 +125,10 @@ DEBUG=1
 
 5- Start the backend
 
+```bash
+uvicorn server.server:app --reload
+```
+
 6- Start the frontend
 
 ```bash
