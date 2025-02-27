@@ -6,7 +6,7 @@ import { NodeProps } from '@xyflow/react';
 
 export function URIRefNode({ data, selected }: NodeProps<URIRefNodeType>) {
   return (
-    <BaseNode selected={selected}>
+    <BaseNode selected={selected} className='uri-node'>
       <Card
         style={{
           padding: 0,
@@ -16,12 +16,6 @@ export function URIRefNode({ data, selected }: NodeProps<URIRefNodeType>) {
       >
         <div
           className='custom-drag-handle'
-          style={{
-            height: '10px',
-            margin: '8px auto',
-            width: '100%',
-            cursor: 'grab',
-          }}
         >
           <Icon icon='drag-handle-horizontal' size={20} />
         </div>

@@ -12,7 +12,7 @@ export function LiteralNode({ data, selected }: NodeProps<LiteralNodeType>) {
     return data.literal_type;
   };
   return (
-    <BaseNode selected={selected}>
+    <BaseNode selected={selected} className='literal-node'>
       <Card
         style={{
           padding: 0,
@@ -22,12 +22,6 @@ export function LiteralNode({ data, selected }: NodeProps<LiteralNodeType>) {
       >
         <div
           className='custom-drag-handle'
-          style={{
-            height: '10px',
-            margin: '8px auto',
-            width: '100%',
-            cursor: 'grab',
-          }}
         >
           <Icon icon='drag-handle-horizontal' size={20} />
         </div>

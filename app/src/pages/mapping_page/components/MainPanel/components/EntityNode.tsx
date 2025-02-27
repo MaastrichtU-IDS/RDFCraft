@@ -35,7 +35,7 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
   }, [ontologies, data.properties]);
 
   return (
-    <BaseNode selected={selected}>
+    <BaseNode selected={selected} className='entity-node'>
       <Card
         style={{
           padding: 0,
@@ -45,12 +45,6 @@ export function EntityNode({ data, selected }: NodeProps<EntityNodeType>) {
       >
         <div
           className='custom-drag-handle'
-          style={{
-            height: '10px',
-            margin: '8px auto',
-            width: '100%',
-            cursor: 'grab',
-          }}
         >
           <Icon icon='drag-handle-horizontal' size={20} />
         </div>
