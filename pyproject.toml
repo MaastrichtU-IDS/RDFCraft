@@ -22,7 +22,7 @@ dependencies = [
     "envier==0.6.1",
     "fastapi==0.115.2",
     "fastapi-cli==0.0.5",
-    "h11==0.14.0",
+    "h11==0.16.0",
     "html5lib-modern==1.2",
     "httpcore==1.0.6",
     "httptools==0.6.4",
