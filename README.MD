@@ -74,7 +74,7 @@ After running the container, the application will be available at:
 ## Getting Started 🚦
 
 You can find a detailed guide on how to use RDFCraft in the
-[Guide](guide/workspaces.md) section.
+[Guide](/docs/guide/workspaces.md) section.
 
 ## Development 🛠
 
