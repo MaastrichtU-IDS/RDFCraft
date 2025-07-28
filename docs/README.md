@@ -55,7 +55,7 @@ compressed. Run the executable and you are good to go.
 ## Getting Started 🚦
 
 You can find a detailed guide on how to use RDFCraft in the
-[Guide](guide/guide.md) section.
+[Guide](guide/workspaces.md) section.
 
 ## Development 🛠
 

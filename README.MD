@@ -68,13 +68,13 @@ docker run --name rdfcraft -d -p 8080:8000 rdfcraft
 
 This maps port **8000** inside the container to **8080** on your local machine.
 
-After running the container, the application will be available at: [http://localhost:8080](http://localhost:8080)
-
+After running the container, the application will be available at:
+[http://localhost:8080](http://localhost:8080)
 
 ## Getting Started 🚦
 
 You can find a detailed guide on how to use RDFCraft in the
-[Guide](guide/guide.md) section.
+[Guide](guide/workspaces.md) section.
 
 ## Development 🛠
 
