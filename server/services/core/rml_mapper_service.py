@@ -78,7 +78,7 @@ class RMLMapperService(RMLMapperServiceProtocol):
         rdf_output_file: Path = self.TEMP_DIR / f"rdf_{process_uuid}.ttl"
 
         cmd_rml = (
-            f"java -Xmx{self.java_memory} -jar {self.mapper_bin} -m {rml_file} -o {rdf_output_file} -s"
+            f"java -Xmx{self.java_memory} -Dfile.encoding=UTF-8 -jar {self.mapper_bin} -m {rml_file} -o {rdf_output_file} -s"
             " turtle"
         )
 

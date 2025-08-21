@@ -22,12 +22,12 @@ FROM ghcr.io/astral-sh/uv:python3.11-alpine
 # Set working directory
 WORKDIR /app
 
-# Install JDK and other dependencies 
+# Install JDK and other dependencies
 RUN apk add --no-cache openjdk17-jdk curl && \
     addgroup -S app && adduser -S app -G app
 
 # Download RMLMapper
-ADD https://github.com/RMLio/rmlmapper-java/releases/download/v7.2.0/rmlmapper-7.2.0-r374-all.jar /app/bin/mapper.jar
+ADD https://github.com/RMLio/rmlmapper-java/releases/download/v7.3.3/rmlmapper-7.3.3-r374-all.jar /app/bin/mapper.jar
 
 # Set root for installation and changing permissions
 USER root
