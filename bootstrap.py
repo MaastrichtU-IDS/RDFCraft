@@ -35,6 +35,7 @@ async def bootstrap():
 
     environ["JAVA_TOOL_OPTIONS"] = (
         environ.get("JAVA_TOOL_OPTIONS", "") + " -Dfile.encoding=UTF-8"
+    )
     java_tool_options = environ.get("JAVA_TOOL_OPTIONS", "")
     if "-Dfile.encoding=UTF-8" not in java_tool_options:
         java_tool_options = (java_tool_options + " -Dfile.encoding=UTF-8").strip()
