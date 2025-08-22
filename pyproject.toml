@@ -40,7 +40,7 @@ dependencies = [
     "opentelemetry-api==1.28.0",
     "packaging==24.2",
     "pandas==2.2.3",
-    "protobuf==5.28.3",
+    "protobuf==5.29.5",
     "proxy_tools==0.1.0",
     "pydantic==2.9.2",
     "pydantic_core==2.23.4",
