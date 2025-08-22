@@ -28,7 +28,7 @@ uv run nuitka \
   --output-dir=dist \
   --include-data-dir=public=public \
   --include-data-dir=bin=bin \
-  --macos-sign-identity="Developer ID Application: Ensar Emir EROL (572B438PMX)" \
+  --macos-sign-identity="${SIGN_ID}" \
   --macos-sign-notarization \
   --macos-create-app-bundle \
   --macos-signed-app-name="$APP_ID" \

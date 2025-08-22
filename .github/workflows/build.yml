@@ -56,18 +56,14 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
+          # after unlock and before list-keychain:
+          security default-keychain -s "$KEYCHAIN_PATH"
+
+          # keep partition list, but target the same keychain explicitly:
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
       - name: Build
         run: |
-          mkdir -p bin
-          echo "Downloading RMLMapper"
-          curl -L https://github.com/RMLio/rmlmapper-java/releases/download/v7.2.0/rmlmapper-7.2.0-r374-all.jar -o bin/mapper.jar
-
-          echo "Building frontend"
-          npm run frontend:prod
-
-          echo "Installing python dependencies"
-          uv sync
-
           echo "Building application"
           ./scripts/mac/build.sh
 
