@@ -12,7 +12,7 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       TEAM_ID: ${{ secrets.TEAM_ID }}
       SIGN_ID: ${{ secrets.SIGN_ID }}
-      APPLE_ID_PASSWORD: ${{ secrets.APP_PASSWORD }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
