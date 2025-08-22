@@ -8,6 +8,11 @@ permissions:
   contents: write
 jobs:
   build-mac:
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      TEAM_ID: ${{ secrets.TEAM_ID }}
+      SIGN_ID: ${{ secrets.SIGN_ID }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,6 +24,37 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '22.9.0'
+      - name: Install Apple certificate and provisioning profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERT_BASE64 }}
+          BUILD_CERTIFICATE_PASSWORD: ${{ secrets.BUILD_CERT_PASS }}
+          BUILD_PROVISION_PROFILE_BASE64:
+            ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASS }}
+
+        run: |
+          # Create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.provisionprofile
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # Import certificate and provisioning profile from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$BUILD_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Apply provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
       - name: Build
         run: |
@@ -33,22 +69,13 @@ jobs:
           uv sync
 
           echo "Building application"
-          uv run nuitka \
-            --standalone \
-            --product-version=${{ github.ref_name }} \
-            --file-version=${{ github.ref_name }} \
-            --output-dir=dist \
-            --include-data-dir=public=public \
-            --include-data-dir=bin=bin \
-            --macos-create-app-bundle \
-            --macos-app-protected-resource="NSLocalNetworkUsageDescription:This application requires to run a local server to serve the frontend." \
-            --product-name=RDFCraft \
-            --assume-yes-for-downloads \
-            --deployment \
-            main.py
+          ./scripts/mac/build.sh
 
-          # Nuitka will produce dist/main.app. Rename to RDFCraft.app
-          mv dist/main.app dist/RDFCraft.app
+          echo "Preparing application bundle for notarization"
+          ./scripts/mac/prepare-bundle.sh
+
+          echo "Notarizing application"
+          ./scripts/mac/notarize-bundle.sh
 
       # Zip the RDFCraft.app so it remains a folder after download
       - name: Create ZIP from .app
@@ -61,6 +88,11 @@ jobs:
         with:
           name: RDFCraft-Mac
           path: dist/RDFCraft-mac.zip
+
+      - name: Cleanup keychain
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
+          rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.provisionprofile
 
   build-win:
     runs-on: windows-latest
