@@ -1,6 +1,6 @@
 import logging
 import platform
-from os import getenv
+from os import environ, getenv
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -27,6 +27,15 @@ async def bootstrap():
         logger.setLevel(logging.DEBUG)
         di["DEBUG"] = True
         logger.info("Debug mode enabled")
+
+    # Set encoding
+    environ.setdefault("LANG", "en_US.UTF-8")
+    environ.setdefault("LC_ALL", "en_US.UTF-8")
+    environ.setdefault("LC_CTYPE", "en_US.UTF-8")
+
+    environ["JAVA_TOOL_OPTIONS"] = (
+        environ.get("JAVA_TOOL_OPTIONS", "") + " -Dfile.encoding=UTF-8"
+    ).strip()
 
     # Setting up application directory
     str_application_directory = getenv("RDFCRAFT_PATH")

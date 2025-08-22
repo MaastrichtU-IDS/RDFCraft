@@ -77,19 +77,29 @@ class RMLMapperService(RMLMapperServiceProtocol):
 
         rdf_output_file: Path = self.TEMP_DIR / f"rdf_{process_uuid}.ttl"
 
-        cmd_rml = (
-            f"java -Xmx{self.java_memory} -Dfile.encoding=UTF-8 -jar {self.mapper_bin} -m {rml_file} -o {rdf_output_file} -s"
-            " turtle"
-        )
+        cmd_rml = [
+            "java",
+            f"-Xmx{self.java_memory}",
+            "-Dfile.encoding=UTF-8",
+            "-jar",
+            str(self.mapper_bin),
+            "-m",
+            str(rml_file),
+            "-o",
+            str(rdf_output_file),
+            "-s",
+            "turtle",
+        ]
 
         self.logger.info(f"Executing command: {cmd_rml}")
 
         try:
             result = subprocess.run(
-                cmd_rml,
+                " ".join(cmd_rml),
                 shell=True,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
 
             if result.returncode != 0:
