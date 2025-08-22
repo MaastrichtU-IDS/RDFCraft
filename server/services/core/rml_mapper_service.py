@@ -96,7 +96,7 @@ class RMLMapperService(RMLMapperServiceProtocol):
         try:
             result = subprocess.run(
                 " ".join(cmd_rml),
-                shell=True,
+                cmd_rml,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
