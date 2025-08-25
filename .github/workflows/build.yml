@@ -74,10 +74,10 @@ jobs:
           ./scripts/mac/notarize-bundle.sh
 
       # Zip the RDFCraft.app so it remains a folder after download
-      - name: Create ZIP from .app
+      - name: Rename the zip file
         run: |
           cd dist
-          zip -r RDFCraft-mac.zip RDFCraft.app
+          mv RDFCraft.zip RDFCraft-mac.zip
 
       - name: Upload Mac Artifact
         uses: actions/upload-artifact@v4

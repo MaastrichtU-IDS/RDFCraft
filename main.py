@@ -84,7 +84,8 @@ di["PORT"] = port
 def start_fastapi():
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=port, log_config=None)
+    # DO NOT Serve on 0.0.0.0, Windows will show firewall prompt on every launch
+    uvicorn.run(app, host="127.0.0.1", port=port, log_config=None)
 
 
 def on_closing():
@@ -104,7 +105,7 @@ if __name__ == "__main__":
         # Create window
         window = webview.create_window(
             "RDFCraft",
-            f"http://localhost:{port}",
+            f"http://127.0.0.1:{port}",
             min_size=(800, 600),
             resizable=True,
         )

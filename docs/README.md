@@ -40,18 +40,6 @@ From [Releases](https://github.com/MaastrichtU-IDS/RDFCraft/releases) page,
 download the latest release for your OS and extract the contents if it is
 compressed. Run the executable and you are good to go.
 
-> [!WARNING]
->
-> On macOS, because app is not notarized by Apple, you need to run following
-> command to bypass the gatekeeper:
->
-> ```bash
-> xattr -rd com.apple.quarantine </path/to/RDFCraft.app>
-> ```
->
-> More information about gatekeeper can be found
-> [here](https://support.apple.com/en-us/HT202491).
-
 ## Getting Started 🚦
 
 You can find a detailed guide on how to use RDFCraft in the
