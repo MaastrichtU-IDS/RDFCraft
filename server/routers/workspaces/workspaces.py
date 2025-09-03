@@ -515,11 +515,13 @@ async def delete_mapping(
 @router.put("/{workspace_id}/mapping/{mapping_id}")
 async def update_mapping(
     mapping_id: str,
+    workspace_id: str,
     data: MappingGraph,
     update_mapping_facade: UpdateMappingDep,
 ) -> BasicResponse:
     facade_response = update_mapping_facade.execute(
         mapping_id=mapping_id,
+        workspace_id=workspace_id,
         mapping_graph=data,
     )
 
