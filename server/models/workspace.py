@@ -21,6 +21,7 @@ class WorkspaceModel:
         ontologies (list[str]): ids of ontologies
         prefixes (dict[str, str]): prefixes
         used_uri_patterns (list[str]): list of used URI patterns
+        used_uri_patterns_by_workspace (dict[str, list[str]]): mapping of workspace IDs to their used URI patterns
     """
 
     uuid: str
@@ -33,6 +34,7 @@ class WorkspaceModel:
     prefixes: dict[str, str]
     ontologies: list[str]
     used_uri_patterns: list[str]
+    used_uri_patterns_by_workspace: dict[str, list[str]]
 
     @classmethod
     def create_with_defaults(
@@ -67,6 +69,7 @@ class WorkspaceModel:
             prefixes={},
             ontologies=[],
             used_uri_patterns=[],
+            used_uri_patterns_by_workspace={},
         )
 
     def to_dict(self) -> dict:
@@ -87,6 +90,7 @@ class WorkspaceModel:
             "prefixes": self.prefixes,
             "ontologies": self.ontologies,
             "used_uri_patterns": self.used_uri_patterns,
+            "used_uri_patterns_by_workspace": self.used_uri_patterns_by_workspace,
         }
 
     @classmethod
@@ -111,6 +115,9 @@ class WorkspaceModel:
             prefixes=data["prefixes"],
             ontologies=data["ontologies"],
             used_uri_patterns=data["used_uri_patterns"],
+            used_uri_patterns_by_workspace=data.get(
+                "used_uri_patterns_by_workspace", {}
+            ),
         )
 
     def copy_with(
@@ -124,6 +131,7 @@ class WorkspaceModel:
         prefixes: dict[str, str] | None = None,
         ontologies: list[str] | None = None,
         used_uri_patterns: list[str] | None = None,
+        used_uri_patterns_by_workspace: dict[str, list[str]] | None = None,
     ) -> "WorkspaceModel":
         """
         Create a copy of the workspace with updated attributes
@@ -158,4 +166,7 @@ class WorkspaceModel:
             used_uri_patterns=used_uri_patterns
             if used_uri_patterns is not None
             else self.used_uri_patterns,
+            used_uri_patterns_by_workspace=used_uri_patterns_by_workspace
+            if used_uri_patterns_by_workspace is not None
+            else self.used_uri_patterns_by_workspace,
         )
