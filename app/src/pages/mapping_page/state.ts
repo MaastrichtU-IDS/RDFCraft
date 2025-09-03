@@ -50,6 +50,7 @@ interface MappingPageStateActions {
     selectedTab: 'properties' | 'ai' | 'references' | 'search',
   ) => void;
   setIsSidePanelCollapsed: (isSidePanelCollapsed: boolean) => void;
+  setLoading: (isLoading: string | null) => void;
 }
 
 const defaultState: MappingPageState = {
@@ -174,6 +175,9 @@ const functions: ZustandActions<MappingPageStateActions, MappingPageState> = (
   },
   setIsSidePanelCollapsed(isSidePanelCollapsed: boolean) {
     set({ isSidePanelCollapsed });
+  },
+  setLoading(isLoading: string | null) {
+    set({ isLoading });
   },
 });
 
