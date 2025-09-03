@@ -4,7 +4,7 @@ from server.facades import (
     BaseFacade,
     FacadeResponse,
 )
-from server.models.mapping import MappingGraph, MappingLiteral, MappingNode
+from server.models.mapping import MappingGraph, MappingLiteral
 from server.service_protocols.mapping_service_protocol import (
     MappingServiceProtocol,
 )
