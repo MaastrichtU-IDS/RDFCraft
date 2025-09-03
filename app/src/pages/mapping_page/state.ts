@@ -1,3 +1,5 @@
+import WorkspacesApi from '@/lib/api/workspaces_api';
+import { Workspace } from '@/lib/api/workspaces_api/types';
 import YARRRMLService from '@/lib/api/yarrrml_service';
 import {
   XYEdgeType,
@@ -19,6 +21,7 @@ type SelectedTab = 'properties' | 'ai' | 'references' | 'search' | 'problems';
 
 interface MappingPageState {
   mapping: MappingGraph | null;
+  workspace: Workspace | null;
   source: Source | null;
   ontologies: Ontology[] | null;
   prefixes: Prefix[] | null;
@@ -51,6 +54,7 @@ interface MappingPageStateActions {
 
 const defaultState: MappingPageState = {
   mapping: null,
+  workspace: null,
   source: null,
   ontologies: null,
   prefixes: null,
@@ -69,6 +73,7 @@ const functions: ZustandActions<MappingPageStateActions, MappingPageState> = (
   async loadMapping(workspaceUuid: string, mappingUuid: string) {
     set({ isLoading: 'Loading mapping...' });
     try {
+      const workspace_promise = WorkspacesApi.getWorkspace(workspaceUuid);
       const mapping_promise = MappingService.getMappingInWorkspace(
         workspaceUuid,
         mappingUuid,
@@ -77,15 +82,16 @@ const functions: ZustandActions<MappingPageStateActions, MappingPageState> = (
         OntologyApi.getOntologiesInWorkspace(workspaceUuid);
       const prefixes_promise = PrefixApi.getPrefixesInWorkspace(workspaceUuid);
 
-      const [mapping, ontologies, prefixes] = await Promise.all([
+      const [mapping, ontologies, prefixes, workspace] = await Promise.all([
         mapping_promise,
         ontologies_promise,
         prefixes_promise,
+        workspace_promise
       ]);
 
       const source = await SourceApi.getSource(mapping.source_id);
 
-      set({ mapping, source, ontologies, prefixes, error: null });
+      set({ mapping, source, ontologies, prefixes, workspace, error: null });
     } catch (error) {
       if (error instanceof Error) {
         set({ error: error.message });

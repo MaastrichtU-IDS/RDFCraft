@@ -13,15 +13,21 @@ import {
 import useClassOrderer from '@/pages/mapping_page/hooks/useClassOrderer';
 import useDomainOrderer from '@/pages/mapping_page/hooks/useDomainOrderer';
 import useMappingPage from '@/pages/mapping_page/state';
-import { FormGroup, H5, InputGroup, MenuItem } from '@blueprintjs/core';
+import { Button, FormGroup, H5, InputGroup, MenuItem } from '@blueprintjs/core';
 import {
   ItemListRendererProps,
   ItemRenderer,
   MultiSelect,
 } from '@blueprintjs/select';
-import { getConnectedEdges, useEdges, useReactFlow } from '@xyflow/react';
+import {
+  getConnectedEdges,
+  useEdges,
+  useNodes,
+  useReactFlow,
+} from '@xyflow/react';
 import { useCallback, useMemo } from 'react';
 
+import generateURI from '@/pages/mapping_page/components/SidePanel/components/NodeProperties/components/utils/generateURI';
 import './styles.scss';
 
 const renderMenuItemProperty: ItemRenderer<NamedNode & { group: string }> = (
@@ -54,7 +60,17 @@ const renderMenuItemClass: ItemRenderer<NamedNode & { group: string }> = (
 
 const EntityNodeProperties = ({ node }: { node: EntityNodeType }) => {
   const ontologies = useMappingPage(state => state.ontologies);
+  const usedURIs = useMappingPage(state => state.workspace?.used_uri_patterns);
+  const refs = useMappingPage(state => state.source?.references);
+  const sourceDescription = useMappingPage(state => state.mapping?.description);
+  const prefixes = useMappingPage(state => state.workspace?.prefixes);
   const edges = useEdges<XYEdgeType>();
+  const nodes = useNodes<EntityNodeType>();
+  const currentlyUsedURIs: string[] = useMemo(() => {
+    return nodes
+      .filter(n => n.data.type === 'entity' || n.data.type === 'uri_ref')
+      .map(n => n.data.uri_pattern);
+  }, [nodes]);
 
   const reactflow = useReactFlow();
 
@@ -355,7 +371,44 @@ const EntityNodeProperties = ({ node }: { node: EntityNodeType }) => {
           resetOnSelect
         />
       </FormGroup>
-      <FormGroup label='URI Pattern' labelFor='uriPattern'>
+      <FormGroup
+        label={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>URI Pattern</span>
+            <Button
+              icon='clean'
+              style={{ marginLeft: 4 }}
+              onClick={async () => {
+                const result = await generateURI(
+                  usedURIs || [],
+                  currentlyUsedURIs || [],
+                  node.data.label,
+                  node.data.rdf_type.join(', '),
+                  sourceDescription || '',
+                  refs || [],
+                  prefixes || [],
+                );
+                if (result) {
+                  toast.show({
+                    message: `Generated URI pattern: ${result}`,
+                    intent: 'success',
+                  });
+                  updateNode(null, result, null, null);
+                  return;
+                }
+                toast.show({
+                  message: 'Failed to generate URI pattern',
+                  intent: 'danger',
+                });
+              }}
+            >
+              Use AI to generate URI pattern
+            </Button>
+          </div>
+        }
+        labelFor='uriPattern'
+        subLabel='The URI pattern for the entity'
+      >
         <OneLineMonaco
           onChange={(value: string | undefined) =>
             updateNode(null, value ?? '', null, null)
