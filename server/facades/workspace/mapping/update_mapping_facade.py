@@ -46,8 +46,6 @@ class UpdateMappingFacade(BaseFacade):
                 for uri in uris
             }
         )
-        # Remove duplicates
-        workspace.used_uri_patterns = list(set(workspace.used_uri_patterns))
 
         self.workspace_service.update_workspace(workspace)
 
