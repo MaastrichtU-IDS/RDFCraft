@@ -13,15 +13,28 @@ import {
 import useClassOrderer from '@/pages/mapping_page/hooks/useClassOrderer';
 import useDomainOrderer from '@/pages/mapping_page/hooks/useDomainOrderer';
 import useMappingPage from '@/pages/mapping_page/state';
-import { FormGroup, H5, InputGroup, MenuItem } from '@blueprintjs/core';
+import {
+  Button,
+  FormGroup,
+  H5,
+  InputGroup,
+  MenuItem,
+  Tooltip,
+} from '@blueprintjs/core';
 import {
   ItemListRendererProps,
   ItemRenderer,
   MultiSelect,
 } from '@blueprintjs/select';
-import { getConnectedEdges, useEdges, useReactFlow } from '@xyflow/react';
+import {
+  getConnectedEdges,
+  useEdges,
+  useNodes,
+  useReactFlow,
+} from '@xyflow/react';
 import { useCallback, useMemo } from 'react';
 
+import generateURI from '@/pages/mapping_page/components/SidePanel/components/NodeProperties/components/utils/generateURI';
 import './styles.scss';
 
 const renderMenuItemProperty: ItemRenderer<NamedNode & { group: string }> = (
@@ -54,7 +67,21 @@ const renderMenuItemClass: ItemRenderer<NamedNode & { group: string }> = (
 
 const EntityNodeProperties = ({ node }: { node: EntityNodeType }) => {
   const ontologies = useMappingPage(state => state.ontologies);
+  const usedURIs = useMappingPage(state => state.workspace?.used_uri_patterns);
+  const refs = useMappingPage(state => state.source?.references);
+  const sourceDescription = useMappingPage(state => state.mapping?.description);
+  const prefixes = useMappingPage(state => state.workspace?.prefixes);
+  const setLoading = useMappingPage(state => state.setLoading);
   const edges = useEdges<XYEdgeType>();
+  const nodes = useNodes<EntityNodeType>();
+  const currentlyUsedURIs: string[] = useMemo(() => {
+    return nodes
+      .filter(n => n.data.type === 'entity' || n.data.type === 'uri_ref')
+      .filter(n => n.id !== node.id)
+      .map(n => {
+        return `Label: ${n.data.label}, Type: ${n.data.rdf_type}, URI Pattern: ${n.data.uri_pattern}`;
+      });
+  }, [nodes, node.id]);
 
   const reactflow = useReactFlow();
 
@@ -355,7 +382,51 @@ const EntityNodeProperties = ({ node }: { node: EntityNodeType }) => {
           resetOnSelect
         />
       </FormGroup>
-      <FormGroup label='URI Pattern' labelFor='uriPattern'>
+      <FormGroup
+        label={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>URI Pattern</span>
+            <Tooltip
+              content={<span>Generate a URI pattern using AI Assistant</span>}
+            >
+              <Button
+                icon='clean'
+                minimal
+                intent='primary'
+                style={{ marginLeft: 4 }}
+                onClick={async () => {
+                  setLoading('Generating URI pattern...');
+                  const result = await generateURI(
+                    usedURIs || [],
+                    currentlyUsedURIs || [],
+                    node.data.label,
+                    node.data.rdf_type.join(', '),
+                    properties.map(p => p.full_uri),
+                    sourceDescription || '',
+                    refs || [],
+                    prefixes || [],
+                  );
+                  setLoading(null);
+                  if (result) {
+                    toast.show({
+                      message: `Generated URI pattern: ${result}`,
+                      intent: 'success',
+                    });
+                    updateNode(null, result, null, null);
+                    return;
+                  }
+                  toast.show({
+                    message: 'Failed to generate URI pattern',
+                    intent: 'danger',
+                  });
+                }}
+              />
+            </Tooltip>
+          </div>
+        }
+        labelFor='uriPattern'
+        subLabel='The URI pattern for the entity'
+      >
         <OneLineMonaco
           onChange={(value: string | undefined) =>
             updateNode(null, value ?? '', null, null)
