@@ -1,0 +1,14 @@
+@use '@blueprintjs/core/lib/scss/variables' as *;
+
+.shapes-page {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
+.shapes-page-content {
+  margin-top: $pt-navbar-height;
+  width: 100vw;
+  height: calc(100vh - #{$pt-navbar-height});
+}

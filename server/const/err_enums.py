@@ -18,6 +18,13 @@ class ErrCodes(Enum):
     # Ontology Service
     ONTOLOGY_NOT_FOUND = 40
 
+    # Shapes Service
+    SHAPES_NOT_FOUND = 41
+
+    # SHACL Service
+    SHACL_VALIDATOR_NOT_FOUND = 42
+    SHACL_VALIDATION_EXECUTION_ERROR = 43
+
     # Workspace Service
     WORKSPACE_NOT_FOUND = 60
     PREFIX_NOT_FOUND = 61

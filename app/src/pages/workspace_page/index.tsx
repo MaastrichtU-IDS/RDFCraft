@@ -129,6 +129,22 @@ const WorkspacePage = () => {
             >
               Prefixes
             </Button>
+            <Button
+              icon='shield'
+              onClick={() => {
+                navigation('shapes');
+              }}
+            >
+              Shapes
+            </Button>
+            <Button
+              icon='tick-circle'
+              onClick={() => {
+                navigation('validate');
+              }}
+            >
+              Validate & Refine
+            </Button>
           </ButtonGroup>
         </Navbar.Group>
       </Navbar>

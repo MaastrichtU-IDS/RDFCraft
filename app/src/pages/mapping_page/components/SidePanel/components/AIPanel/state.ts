@@ -1,4 +1,10 @@
+import ShapesApi from "@/lib/api/shapes_api";
 import SettingsApi from "@/lib/api/settings_api";
+import {
+  buildGenerateMappingMessages,
+} from "@/lib/llm/generateMappingPrompt";
+import { normalizeGeneratedMapping } from "@/lib/llm/normalizeGeneratedMapping";
+import useMappingPage from "@/pages/mapping_page/state";
 import { ZustandActions } from "@/utils/zustand";
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -8,7 +14,7 @@ import { ChatCompletionCreateParamsStreaming } from "openai/resources/index.mjs"
 
 
 interface AIPanelState {
-  isLoading: 'init' | 'loading' | 'answering' | null;
+  isLoading: 'init' | 'loading' | 'answering' | 'generating' | null;
   isReady: boolean;
   openai: OpenAI | null;
   error: string | null;
@@ -47,6 +53,7 @@ export type AIPanelStateActions = {
     references: string[]
   ) => Promise<void>;
   sendMessage: (message: string) => Promise<void>;
+  generateMapping: (workspaceUuid: string) => Promise<void>;
   clear: () => void;
 };
 
@@ -195,6 +202,64 @@ const functions: ZustandActions<AIPanelStateActions, AIPanelState> = (set, get) 
       }, streamingResponse: null, isLoading: null, streamController: null
     });
 
+  },
+  async generateMapping(workspaceUuid: string) {
+    set({ isLoading: 'generating', error: null });
+    try {
+      const openai_url = await SettingsApi.getOpenAIURL();
+      const openai_key = await SettingsApi.getOpenAIKey();
+      const openai_model = await SettingsApi.getOpenAIModel();
+
+      if (!openai_url || !openai_key || !openai_model) {
+        set({ error: 'OpenAI URL, Key or Model not set, please set it in the settings page' });
+        return;
+      }
+
+      const mappingPageState = useMappingPage.getState();
+      const { mapping, source, ontologies, prefixes } = mappingPageState;
+
+      if (!mapping || !source) {
+        set({ error: 'Mapping or source not loaded yet' });
+        return;
+      }
+
+      const shapeSets = await ShapesApi.getShapesInWorkspace(workspaceUuid).catch(
+        () => [],
+      );
+
+      const openai = new OpenAI({
+        apiKey: openai_key,
+        baseURL: openai_url,
+        dangerouslyAllowBrowser: true,
+      });
+
+      const messages = buildGenerateMappingMessages({
+        mappingName: mapping.name,
+        mappingDescription: mapping.description,
+        references: source.references,
+        ontologies: ontologies ?? [],
+        shapesContent: shapeSets.map(shapes => shapes.content),
+        prefixes: Object.fromEntries(
+          (prefixes ?? []).map(p => [p.prefix, p.uri]),
+        ),
+      });
+
+      const completion = await openai.chat.completions.create({
+        model: openai_model,
+        messages,
+        response_format: { type: 'json_object' },
+      });
+
+      const raw = completion.choices[0]?.message?.content ?? '{}';
+      const parsed = JSON.parse(raw);
+      const generatedGraph = normalizeGeneratedMapping(parsed, mapping);
+
+      mappingPageState.setMapping(generatedGraph);
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : String(error) });
+    } finally {
+      set({ isLoading: null });
+    }
   },
 });
 

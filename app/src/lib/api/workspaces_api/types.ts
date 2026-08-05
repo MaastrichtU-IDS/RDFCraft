@@ -8,6 +8,7 @@ interface Workspace {
   mappings: string[];
   prefixes: Record<string, string>[];
   ontologies: string[];
+  shapes: string[];
   used_uri_patterns: string[];
   used_uri_patterns_by_workspace: Record<string, string[]>;
   enabled_features: string[];

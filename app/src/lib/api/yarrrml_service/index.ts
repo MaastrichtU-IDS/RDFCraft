@@ -2,6 +2,7 @@ import { Prefix } from '@/lib/api/prefix_api/types';
 import RMLGenerator from '@rmlio/yarrrml-parser/lib/rml-generator';
 import { Writer } from 'n3';
 import ApiService from '../../services/api_service';
+import { MappingGraph } from '../mapping_service/types';
 
 class YARRRMLService {
   private static getApiClient(): ApiService {
@@ -26,6 +27,34 @@ class YARRRMLService {
 
     throw new Error(
       `Failed to get YARRRML mapping: ${result.message} (status: ${result.status})`,
+    );
+  }
+
+  /**
+   * Like getYARRRMLMapping, but converts the given in-memory MappingGraph
+   * directly instead of whatever is currently persisted for its uuid --
+   * needed to actually test a candidate fix (getYARRRMLMapping would
+   * silently ignore it and re-read the saved mapping instead).
+   */
+  public static async getYARRRMLMappingPreview(
+    workspaceUuid: string,
+    mapping: MappingGraph,
+  ): Promise<string> {
+    const result = await this.getApiClient().callApi<string>(
+      `/workspaces/${workspaceUuid}/mapping/yarrrml-preview`,
+      {
+        method: 'POST',
+        body: mapping,
+        parser: data => data as string,
+      },
+    );
+
+    if (result.type === 'success') {
+      return result.data;
+    }
+
+    throw new Error(
+      `Failed to get YARRRML preview: ${result.message} (status: ${result.status})`,
     );
   }
 

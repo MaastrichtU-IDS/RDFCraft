@@ -19,6 +19,7 @@ class WorkspaceModel:
         enabled_features (list[str]): list of enabled features
         mappings (list[str]): ids of mappings
         ontologies (list[str]): ids of ontologies
+        shapes (list[str]): ids of SHACL shape sets
         prefixes (dict[str, str]): prefixes
         used_uri_patterns (list[str]): list of used URI patterns
         used_uri_patterns_by_workspace (dict[str, list[str]]): mapping of workspace IDs to their used URI patterns
@@ -33,6 +34,7 @@ class WorkspaceModel:
     mappings: list[str]
     prefixes: dict[str, str]
     ontologies: list[str]
+    shapes: list[str]
     used_uri_patterns: list[str]
     used_uri_patterns_by_workspace: dict[str, list[str]]
 
@@ -68,6 +70,7 @@ class WorkspaceModel:
             mappings=[],
             prefixes={},
             ontologies=[],
+            shapes=[],
             used_uri_patterns=[],
             used_uri_patterns_by_workspace={},
         )
@@ -89,6 +92,7 @@ class WorkspaceModel:
             "mappings": self.mappings,
             "prefixes": self.prefixes,
             "ontologies": self.ontologies,
+            "shapes": self.shapes,
             "used_uri_patterns": self.used_uri_patterns,
             "used_uri_patterns_by_workspace": self.used_uri_patterns_by_workspace,
         }
@@ -114,6 +118,7 @@ class WorkspaceModel:
             mappings=data["mappings"],
             prefixes=data["prefixes"],
             ontologies=data["ontologies"],
+            shapes=data.get("shapes", []),
             used_uri_patterns=data["used_uri_patterns"],
             used_uri_patterns_by_workspace=data.get(
                 "used_uri_patterns_by_workspace", {}
@@ -130,6 +135,7 @@ class WorkspaceModel:
         mappings: list[str] | None = None,
         prefixes: dict[str, str] | None = None,
         ontologies: list[str] | None = None,
+        shapes: list[str] | None = None,
         used_uri_patterns: list[str] | None = None,
         used_uri_patterns_by_workspace: dict[str, list[str]] | None = None,
     ) -> "WorkspaceModel":
@@ -163,6 +169,7 @@ class WorkspaceModel:
             mappings=mappings if mappings is not None else self.mappings,
             prefixes=prefixes if prefixes is not None else self.prefixes,
             ontologies=ontologies if ontologies is not None else self.ontologies,
+            shapes=shapes if shapes is not None else self.shapes,
             used_uri_patterns=used_uri_patterns
             if used_uri_patterns is not None
             else self.used_uri_patterns,

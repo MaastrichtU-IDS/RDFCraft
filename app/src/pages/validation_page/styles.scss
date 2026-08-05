@@ -1,0 +1,44 @@
+@use '@blueprintjs/core/lib/scss/variables' as *;
+
+.validation-page {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
+.validation-page-content {
+  margin-top: $pt-navbar-height;
+  width: 100vw;
+  height: calc(100vh - #{$pt-navbar-height});
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.validation-page-per-table {
+  flex-shrink: 0;
+}
+
+.validation-page-row {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  min-height: 300px;
+}
+
+.validation-page-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+
+.validation-page-column-content {
+  flex: 1;
+  overflow-y: auto;
+}

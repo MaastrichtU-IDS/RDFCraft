@@ -4,6 +4,7 @@ import useWorkspacesPageState from './state';
 
 import CreateWorkspaceDialog from './components/CreateWorkspaceDialog';
 
+import { loadMimicExample } from '@/lib/mimicExample/loadMimicExample';
 import { useNavigate } from 'react-router-dom';
 import DeleteAlert from '../../components/DeleteAlert';
 import toast from '../../consts/toast';
@@ -30,10 +31,33 @@ const WorkspacesPage = () => {
   );
 
   const [open, setOpen] = useState<'create' | 'delete' | null>(null);
+  const [isLoadingExample, setIsLoadingExample] = useState(false);
 
   useEffect(() => {
     pull();
   }, [pull]);
+
+  const handleLoadMimicExample = useCallback(async () => {
+    setIsLoadingExample(true);
+    try {
+      const workspaceUuid = await loadMimicExample();
+      toast.show({
+        message: 'MIMIC demo workspace created',
+        intent: 'success',
+      });
+      navigate(`/workspaces/${workspaceUuid}`);
+    } catch (error) {
+      toast.show({
+        message:
+          error instanceof Error
+            ? `Failed to load MIMIC example: ${error.message}`
+            : 'Failed to load MIMIC example',
+        intent: 'danger',
+      });
+    } finally {
+      setIsLoadingExample(false);
+    }
+  }, [navigate]);
 
   useErrorToast(error);
 
@@ -119,6 +143,13 @@ const WorkspacesPage = () => {
             </Button>
             <Button icon='import' onClick={handleImport}>
               Import Workspace
+            </Button>
+            <Button
+              icon='lab-test'
+              loading={isLoadingExample}
+              onClick={handleLoadMimicExample}
+            >
+              Load MIMIC Example
             </Button>
             <Button icon='cog' onClick={() => navigate('/settings')}>
               Settings
