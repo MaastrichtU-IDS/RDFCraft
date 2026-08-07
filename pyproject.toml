@@ -60,6 +60,7 @@ dependencies = [
     "rdflib==7.1.0",
     "rich==13.9.2",
     "setuptools==70.3.0",
+    "shacl-rust",
     "shellingham==1.5.4",
     "six==1.16.0",
     "sniffio==1.3.1",
@@ -101,3 +102,6 @@ exclude_also = [
     "import .*",
     "return self.__repr__\\(\\)",
     ]
+
+[tool.uv.sources]
+shacl-rust = { git = "https://github.com/ensaremirerol/shacl-rust", subdirectory = "crates/shacl-py", rev = "66d53fce5c39475260f574eb7acc4b93caed44b8" }

@@ -38,5 +38,5 @@ export function resolveOwningMapping(
     ),
   );
 
-  return candidates.length === 1 ? candidates[0] : (candidates[0] ?? null);
+  return candidates.length === 1 ? candidates[0] : null;
 }

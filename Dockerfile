@@ -16,12 +16,17 @@ COPY ./app/src ./src
 
 RUN npm run build
 
-# Stage 2: Build shacl-validator (no prebuilt binary is published upstream)
-FROM rust:alpine AS shacl-builder
+# Stage 2: Backend dependencies -- needs a Rust toolchain to build the
+# shacl-rust Python bindings from source (no prebuilt wheel is published
+# upstream yet, so `uv sync` compiles it via maturin/pyo3).
+FROM ghcr.io/astral-sh/uv:python3.11-alpine AS backend-build
 
-RUN apk add --no-cache musl-dev
+WORKDIR /app
 
-RUN cargo install shacl-cli --root /out
+RUN apk add --no-cache rust cargo musl-dev build-base git
+
+COPY ./pyproject.toml ./uv.lock ./.python-version ./
+RUN uv sync --no-dev
 
 # Stage 3: Backend and Final Image
 FROM ghcr.io/astral-sh/uv:python3.11-alpine
@@ -29,23 +34,24 @@ FROM ghcr.io/astral-sh/uv:python3.11-alpine
 # Set working directory
 WORKDIR /app
 
-# Install JDK and other dependencies
-RUN apk add --no-cache openjdk17-jdk curl && \
+# Install JDK and other dependencies. libgcc is the runtime counterpart of
+# the build-base/gcc used to compile the shacl-rust extension module above --
+# without it, importing shacl_rust fails at runtime with a missing
+# libgcc_s.so.1.
+RUN apk add --no-cache openjdk17-jdk curl libgcc && \
     addgroup -S app && adduser -S app -G app
 
 # Download RMLMapper
 ADD https://github.com/RMLio/rmlmapper-java/releases/download/v7.3.3/rmlmapper-7.3.3-r374-all.jar /app/bin/mapper.jar
 
-# Copy the shacl-validator binary built in the shacl-builder stage
-COPY --from=shacl-builder /out/bin/shacl-validator /app/bin/shacl-validator
-
 # Set root for installation and changing permissions
 USER root
-RUN chmod +x /app/bin/mapper.jar /app/bin/shacl-validator
+RUN chmod +x /app/bin/mapper.jar
 
-# Copy the backend dependencies and install
+# Copy the prebuilt virtualenv from the backend-build stage (avoids shipping
+# the Rust toolchain in the final image)
+COPY --from=backend-build /app/.venv ./.venv
 COPY ./pyproject.toml ./uv.lock ./.python-version ./
-RUN uv sync
 
 # Copy Backend source code
 COPY main.py bootstrap.py ./
@@ -63,5 +69,7 @@ ENV DEBUG=1
 # Expose port
 EXPOSE 8000
 
-# Start the application
-CMD ["uv", "run", "main.py"]
+# Start the application -- invoke the prebuilt venv's interpreter directly
+# rather than `uv run`, which would otherwise try to re-sync against
+# pyproject.toml/uv.lock using a Rust toolchain this final image doesn't have.
+CMD [".venv/bin/python", "main.py"]

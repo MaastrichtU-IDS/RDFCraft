@@ -11,11 +11,19 @@ re-materializing and re-validating the resulting graph shows the violation count
 dropped. A syntactically valid but semantically wrong fix is discarded even if
 `applyFixToMappingGraph` raised no error.
 
+Before any of this, [`repairGuards.ts`](./repairGuards.ts) restricts which operations are even
+offered to the LLM, keyed by the violation's `sourceConstraintComponent` (enforced both in the
+prompt and as a hard check on the LLM's response in `state.ts`). This exists specifically to
+close an evasion path: since acceptance is judged by violation *count*, reclassifying an
+entity away from the class a shape targets can make a `MinCount`/`Closed` violation vanish
+without fixing anything -- the entity just opts out of the shape. `change_rdf_type` is
+therefore only ever offered for genuine `sh:ClassConstraintComponent` violations, never for
+`MinCount`/`Closed` ones, even though it would "resolve" those too.
+
 ## 1. `change_rdf_type`
 
-**Fixes:** wrong entity class (`sh:ClassConstraintComponent`, or a closed-shape violation
-where the entity's actual type doesn't match any shape that allows the property it's
-emitting).
+**Fixes:** wrong entity class (`sh:ClassConstraintComponent` only -- see the guard note
+above).
 
 **Target:** `entity`
 

@@ -412,9 +412,13 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/python,venv,macos,windows,linux,react,node
 
 
-/public/
+public/
 !server/services/local/
 !test/services/local/
 !app/src/lib/
 !scripts/
 bin/
+
+# Bundled example datasets (e.g. mimic-demo) -- not shipped in the repo;
+# will move to an importable package. Kept locally, untracked, for now.
+/examples/

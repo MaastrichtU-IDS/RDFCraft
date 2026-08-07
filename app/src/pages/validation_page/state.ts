@@ -15,6 +15,7 @@ import { applyFixToMappingGraph, UnresolvedFixError } from '@/lib/llm/applyFixTo
 import { buildLocateFixMessages } from '@/lib/llm/locateFixPrompt';
 import { parseShapeClassRequirements } from '@/lib/llm/parseShapeClassRequirements';
 import { buildProposeFixMessages } from '@/lib/llm/proposeFixPrompt';
+import { getAllowedOperationsForViolation } from '@/lib/llm/repairGuards';
 import { IterationLogEntry, LocatedTarget, ProposedFix } from '@/lib/llm/repairTypes';
 import { buildGraphStore, resolveOwningMapping } from '@/lib/llm/resolveOwningMapping';
 import { ZustandActions } from '@/utils/zustand';
@@ -293,6 +294,14 @@ const functions: ZustandActions<
         };
 
         try {
+          const allowedOperations = getAllowedOperationsForViolation(violation);
+          if (allowedOperations.length === 0) {
+            entry.note = `No safe repair operation for constraint component ${violation.source_constraint_component}`;
+            log.push(entry);
+            set({ iterationLog: [...log] });
+            continue;
+          }
+
           const store = buildGraphStore(combineTtls(ttlCache));
           const owningMapping = resolveOwningMapping(violation, store, mappings);
 
@@ -336,6 +345,13 @@ const functions: ZustandActions<
             ),
           );
           entry.fix = fix;
+
+          if (!allowedOperations.includes(fix.operation)) {
+            entry.note = `Fix operation ${fix.operation} is not allowed for constraint component ${violation.source_constraint_component} (allowed: ${allowedOperations.join(', ')})`;
+            log.push(entry);
+            set({ iterationLog: [...log] });
+            continue;
+          }
 
           const fixedMapping = applyFixToMappingGraph(
             owningMapping,
@@ -498,6 +514,14 @@ const functions: ZustandActions<
         };
 
         try {
+          const allowedOperations = getAllowedOperationsForViolation(violation);
+          if (allowedOperations.length === 0) {
+            entry.note = `No safe repair operation for constraint component ${violation.source_constraint_component}`;
+            log.push(entry);
+            patchPerMapping({ iterationLog: [...log] });
+            continue;
+          }
+
           const located = await askForJson<LocatedTarget>(
             openai,
             model,
@@ -530,6 +554,13 @@ const functions: ZustandActions<
             ),
           );
           entry.fix = fix;
+
+          if (!allowedOperations.includes(fix.operation)) {
+            entry.note = `Fix operation ${fix.operation} is not allowed for constraint component ${violation.source_constraint_component} (allowed: ${allowedOperations.join(', ')})`;
+            log.push(entry);
+            patchPerMapping({ iterationLog: [...log] });
+            continue;
+          }
 
           const fixedMapping = applyFixToMappingGraph(mapping, located, fix);
 

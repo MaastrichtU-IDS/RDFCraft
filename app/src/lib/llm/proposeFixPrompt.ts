@@ -2,6 +2,7 @@ import { ShaclViolation } from '@/lib/api/shacl_api/types';
 import { MappingGraph } from '@/lib/api/mapping_service/types';
 import { ChatCompletionMessageParam } from 'openai/resources/index.mjs';
 import { ClassRequirements } from './parseShapeClassRequirements';
+import { getAllowedOperationsForViolation } from './repairGuards';
 import { LocatedTarget } from './repairTypes';
 
 export function buildProposeFixMessages(
@@ -13,6 +14,7 @@ export function buildProposeFixMessages(
 ): ChatCompletionMessageParam[] {
   const target = mapping.nodes.find(n => n.id === located.target_id);
   const edge = mapping.edges.find(e => e.id === located.target_id);
+  const allowedOperations = getAllowedOperationsForViolation(violation);
 
   const systemPrompt = `
 You are an RML mapping repair engineer. You are given a SHACL violation, the mapping element responsible for it (already located), a compact summary of every RDF class the shapes define -- for each class: whether it is closed (declaring any other property is a violation), and which properties it allows, each with its required minimum count and expected datatype (if any) -- and the source's column names ("references").
@@ -46,9 +48,16 @@ Rules:
 - Only use "$(ColumnName)" placeholders where ColumnName is exactly one of the given source references. Never invent column names.
 - Only propose class/predicate/datatype URIs that appear in classRequirements -- never invent one.
 - Match the operation to target_type: "entity" -> change_rdf_type or add_missing_property; "edge" -> change_predicate; "literal" -> change_datatype or reformat_literal_value.
+- The user message names the operation(s) actually allowed for this specific violation's constraint component. That list is authoritative -- it overrides the general shapes above whenever narrower. Never reclassify an entity's type just because it would also make the violation disappear.
 `.trim();
 
+  const changeRdfTypeNote = allowedOperations.includes('change_rdf_type')
+    ? " This is a genuine wrong-class violation, so change_rdf_type is appropriate here -- but the new class must still be the entity's real type, not an arbitrary class picked to dodge the shape."
+    : '';
+
   const userPrompt = `
+Allowed operations for THIS violation's constraint component (${violation.source_constraint_component}) -- you MUST propose one of these, never any other operation, even if a different operation looks like it would also resolve the violation: ${allowedOperations.join(', ')}.${changeRdfTypeNote}
+
 Violation:
 ${JSON.stringify(violation, null, 2)}
 

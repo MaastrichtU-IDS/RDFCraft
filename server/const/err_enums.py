@@ -22,7 +22,6 @@ class ErrCodes(Enum):
     SHAPES_NOT_FOUND = 41
 
     # SHACL Service
-    SHACL_VALIDATOR_NOT_FOUND = 42
     SHACL_VALIDATION_EXECUTION_ERROR = 43
 
     # Workspace Service
