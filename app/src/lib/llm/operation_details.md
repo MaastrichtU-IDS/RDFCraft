@@ -1,110 +1,75 @@
-# Repair Operations
+# Repair Pipeline
 
-The Validate & Refine auto-repair loop (`src/pages/validation_page/state.ts`) fixes SHACL
-violations by proposing one of five typed operations per iteration. Each operation is
-defined in [`repairTypes.ts`](./repairTypes.ts) and applied by
-[`applyFixToMappingGraph.ts`](./applyFixToMappingGraph.ts), which works on a **copy** of the
-mapping graph and never mutates the original.
+The Validate & Refine auto-repair loop (`runRepairLoop` in
+`src/pages/validation_page/state.ts`) fixes SHACL violations with a 3-stage
+pipeline ported from clustered-kg-refine, operating on real RML *text*
+(the mapping's rules) rather than RDFCraft's own node/edge graph model:
 
-Regardless of operation, nothing is trusted on its own: a candidate fix is only persisted if
-re-materializing and re-validating the resulting graph shows the violation count actually
-dropped. A syntactically valid but semantically wrong fix is discarded even if
-`applyFixToMappingGraph` raised no error.
+1. **Stage 1** ([`stage1Signals.ts`](./stage1Signals.ts)) -- deterministic,
+   no LLM call. Converts one `ShaclViolation` into a structured diagnosis:
+   which constraint failed, whether the fault is on the focus node itself
+   (`fix_target: "focus_node"`, e.g. a missing/extra property) or on the
+   value (`"value"`, e.g. wrong datatype), boolean signals, how many sibling
+   violations share the same focus node, and the actual violated SHACL
+   shape's own declaration (via `sh:sourceShape`).
+2. **Stage 2** ([`locateFixPrompt.ts`](./locateFixPrompt.ts)) -- an LLM call.
+   Given Stage 1's output plus the full multi-file RML text, identifies the
+   exact erroneous RML triple(s) and a `root_error_type`. Does not propose a
+   fix.
+3. **Stage 3** ([`proposeRepairPrompt.ts`](./proposeRepairPrompt.ts)) -- an
+   LLM call. Given Stage 2's output, proposes the corrected replacement
+   triple(s) and classifies the edit as one of ten `repair_type` values
+   (`RepairType` in [`repairTypes.ts`](./repairTypes.ts)): `change_rdf_type`,
+   `change_predicate`, `change_datatype`, `reformat_literal_value`,
+   `add_missing_property`, `delete_property`, `change_termtype`,
+   `change_subject_key`, `add_missing_type`, `unknown`. `reformat_literal_value`
+   may use an RML-FN `grel:string_replace` function call instead of a plain
+   template when the fix requires substituting a character inside the value
+   (e.g. a space-separated datetime needing a `T`) -- something a
+   `rr:template`/`rml:reference` alone cannot express.
 
-## 1. `change_rdf_type`
+[`applyRmlTextCorrection.ts`](./applyRmlTextCorrection.ts) applies Stage 3's
+corrected triples by parsing the mapping's RML into a real RDF store and
+replacing triples by **subject identity**, not text matching -- an LLM asked
+to reproduce a triple will often normalize `rr:template` to its full
+`<http://www.w3.org/ns/r2rml#template>` IRI, which broke naive substring
+replacement entirely.
 
-**Fixes:** wrong entity class (`sh:ClassConstraintComponent`, or a closed-shape violation
-where the entity's actual type doesn't match any shape that allows the property it's
-emitting).
+Regardless of repair_type, nothing is trusted on its own: a candidate fix is
+only kept if re-executing the patched RML and re-validating shows the
+violation count actually dropped; otherwise it's reverted.
 
-**Target:** `entity`
+## Guards: closing the "opt out of the shape" evasion path
 
-**Fields:** `old_value` / `new_value` = class URIs.
+Before any of this, [`repairGuards.ts`](./repairGuards.ts) restricts which
+`repair_type` values are even offered, keyed by the violation's
+`constraint_component` -- enforced as a hard check on Stage 3's response in
+`state.ts` (and used to skip hopeless constraint components before spending
+any LLM calls at all). This exists specifically to close an evasion path:
+since acceptance is judged by violation *count*, reclassifying an entity
+away from the class a shape targets can make a `MinCount`/`Closed` violation
+vanish without fixing anything -- the entity just opts out of the shape.
+`change_rdf_type` is therefore only ever offered for a genuine
+`ClassConstraintComponent` violation (or `add_missing_type`, which types a
+*referenced* resource rather than reclassifying the focus node -- not the
+same evasion), never for `MinCount`/`Closed` ones, even though it would
+"resolve" those too.
 
-**Mechanics:** finds `old_value` inside the entity's `rdf_type` array (an entity can have
-multiple asserted types) and replaces just that element with `new_value`.
+The guard table only covers constraint components Stage 2/3's own prompts
+explicitly reason about (`Class`, `MinCount`, `Closed`, `Datatype`,
+`MaxCount`); anything else resolves to no allowed operations and is skipped
+-- a deliberately conservative, fail-safe default rather than guessing.
 
-**Guard:** throws `UnresolvedFixError` if `old_value` isn't actually present in `rdf_type`.
+## Applying an accepted repair to the canvas
 
-## 2. `change_predicate`
-
-**Fixes:** wrong predicate on a relation, usually a closed-shape violation
-(`sh:ClosedConstraintComponent`) where the entity emits a property the shape doesn't allow.
-
-**Target:** `edge`
-
-**Fields:** `old_value` / `new_value` = predicate URIs.
-
-**Mechanics:** finds the edge by id, verifies `edge.source_handle === old_value`, sets it to
-`new_value`. Also updates the **source entity's** `properties` array (removes the old
-predicate, adds the new one) -- `EntityNode` derives its connectable source handles from that
-list, so skipping this would silently break the canvas even though the underlying triple
-would still materialize correctly.
-
-**Real example (MIMIC demo):** DIAGNOSES_ICD's `label` (`rdf-schema#label`, disallowed) →
-`hasCode`. 38 → 19 violations, accepted.
-
-## 3. `change_datatype`
-
-**Fixes:** wrong datatype *declaration* (`sh:DatatypeConstraintComponent` where the shape
-wants a different XSD type than what's declared, e.g. entity declares `xsd:string` where
-`xsd:dateTime` is required).
-
-**Target:** `literal`
-
-**Fields:** `old_value` / `new_value` = XSD datatype URIs.
-
-**Mechanics:** verifies `node.literal_type === old_value`, sets `node.literal_type =
-new_value`. Changes the *type tag* only -- the underlying value template is untouched.
-
-## 4. `reformat_literal_value`
-
-**Fixes:** a *malformed* literal value for its declared datatype -- the datatype declaration
-is already correct, but the actual value string doesn't parse as that type (e.g.
-`"1965-05-30"` isn't a valid `xsd:dateTime` lexical form, it's missing the time component).
-
-**Target:** `literal`
-
-**Fields:** `old_value` / `new_value` = value **templates**, not literal constants -- e.g.
-`$(DOB)` → `$(DOB)T00:00:00`.
-
-**Mechanics:** verifies `node.value === old_value`, sets `node.value = new_value`. Distinct
-from `change_datatype` -- this edits the RML template string, which supports mixing
-`$(ColumnName)` references with literal text exactly like URI templates do (confirmed by
-hand-testing `rr:template "{DOB}T00:00:00"` through the real RMLMapper -- it correctly
-appended the time suffix per row).
-
-**Real example (MIMIC demo):** PATIENTS' `dob_literal` node, `$(DOB)` → `$(DOB)T00:00:00`,
-dropped violations 17 → 2 in one shot -- fixed every malformed birthdate across all 15
-patients at once, since one node's template governs every row.
-
-## 5. `add_missing_property`
-
-**Fixes:** `sh:MinCountConstraintComponent` -- a required property is entirely absent, so
-there's no existing edge or literal to point a fix at.
-
-**Target:** `entity` (the entity that should have emitted the property)
-
-**Fields:**
-- `new_value` = the missing predicate URI
-- `new_node_kind` = `'literal' | 'uri_ref'`
-- `new_node_value` = a value template (literal) or URI template (uri_ref)
-- `new_node_datatype` = XSD type (literal only, optional)
-
-**Mechanics:** the only operation that *creates* graph elements rather than editing one. It
-builds a brand-new node (id via `uuidv4()`, positioned at `entity.x + 320, entity.y +
-properties.length*100` so it doesn't overlap existing children), pushes it into
-`next.nodes`, creates a new edge from the entity to that node with `source_handle =
-new_value` and `target_handle` = the new node's own id (matching how `EntityNode` /
-`LiteralNode` / `URIRefNode` render their target handle as their own id), and adds the
-predicate to the entity's `properties` list.
-
-**Real example (MIMIC demo):** ADMISSIONS was missing `hasAdministrativeGender` entirely -- a
-new literal node templated `$(ADMISSION_TYPE)` was added, dropping 60 → 30 violations.
-
-## Cross-cutting guard logic
-
-Every operation validates that `fix.operation` actually matches `located.target_type` before
-touching anything (e.g. `add_missing_property` requires `target_type: 'entity'` -- when the
-LLM located an `edge` instead, `applyFixToMappingGraph` threw before any mutation, logged as
-"Fix could not be applied," and the iteration moved on cleanly).
+Accepted fixes only ever exist as patched RML text during a run. To reflect
+them on the mapping's visual canvas, [`rmlToMappingGraph.ts`](./rmlToMappingGraph.ts)
+parses that RML back into RDFCraft's own `MappingGraph` model (the inverse
+of the YARRRML→RML generation pipeline), which `applyRepairedMapping`/
+`applyAllRepairedMappings` in `state.ts` then persist via
+`MappingService.updateMapping`. An RML-FN function call it can't fully
+represent as a `$(Column)` template is preserved as a clearly-marked,
+non-editable literal (`⚠ ... (function value, not editable here)`) rather
+than silently dropped -- but re-saving that mapping from the canvas would
+flatten it into a literal constant, losing the function call, so this is a
+one-way rendering, not a full round trip.

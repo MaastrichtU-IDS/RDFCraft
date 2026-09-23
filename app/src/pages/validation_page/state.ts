@@ -16,6 +16,7 @@ import { applyRmlTextCorrection, RmlPatchError } from '@/lib/llm/applyRmlTextCor
 import { buildLocateFixMessages } from '@/lib/llm/locateFixPrompt';
 import { buildClassRequirementsSummary } from '@/lib/llm/parseShapeClassRequirements';
 import { buildProposeRepairMessages } from '@/lib/llm/proposeRepairPrompt';
+import { getAllowedRepairTypes } from '@/lib/llm/repairGuards';
 import {
   IterationLogEntry,
   PriorAttempt,
@@ -375,6 +376,14 @@ async function runRepairLoop(params: RepairLoopParams): Promise<RepairLoopResult
       const stage1 = computeStage1Output(violation, report.violations, shapeSetContent);
       entry.stage1 = stage1;
 
+      const allowedRepairTypes = getAllowedRepairTypes(stage1);
+      if (allowedRepairTypes.length === 0) {
+        entry.note = `No safe repair operation for constraint component ${stage1.constraint_component}`;
+        log.push(entry);
+        onIteration([...log], report, ttlCache);
+        continue;
+      }
+
       const stage2 = await askForJson<Stage2LocateOutput>(
         openai,
         model,
@@ -407,14 +416,17 @@ async function runRepairLoop(params: RepairLoopParams): Promise<RepairLoopResult
       );
       entry.stage3 = stage3;
 
-      // Same guard clustered-kg-refine applies: a required-predicate-missing
-      // violation has no wrong value to correct, so the fix must add the
-      // property -- anything else is a mismatch worth remembering.
-      if (
-        stage1.signals.required_predicate_missing &&
-        stage3.repair_type !== 'add_missing_property'
-      ) {
-        entry.note = `required_predicate_missing signal but repair_type=${stage3.repair_type} (expected add_missing_property)`;
+      // Ported from a sibling review's repairGuards.ts: closes an evasion
+      // path where, since acceptance is judged purely by violation COUNT, an
+      // operation can make a violation disappear by opting the entity out of
+      // the shape rather than actually fixing the mapping (most notably
+      // change_rdf_type on a MinCount/Closed violation). allowedRepairTypes
+      // is the same allow-list already used above to skip hopeless
+      // constraint components before spending any LLM calls; here it rejects
+      // a proposed repair_type that doesn't match, even if it would also
+      // reduce the count.
+      if (!allowedRepairTypes.includes(stage3.repair_type)) {
+        entry.note = `repair_type=${stage3.repair_type} is not allowed for constraint component ${stage1.constraint_component} (allowed: ${allowedRepairTypes.join(', ')})`;
         revertedAttempts.push({
           constraint_component: stage1.constraint_component,
           forbidden_predicate: stage1.forbidden_predicate,
