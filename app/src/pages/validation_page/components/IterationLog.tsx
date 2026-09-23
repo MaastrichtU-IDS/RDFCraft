@@ -48,19 +48,18 @@ const IterationLog = ({ entries }: IterationLogProps) => {
               {entry.violation.message}
             </div>
           )}
-          {entry.fix && entry.fix.operation === 'add_missing_property' && (
+          {entry.stage2 && (
             <div style={{ fontSize: '0.85em' }}>
-              add_missing_property: {entry.fix.new_value} (new{' '}
-              {entry.fix.new_node_kind} node: {entry.fix.new_node_value}
-              {entry.fix.new_node_datatype
-                ? ` [${entry.fix.new_node_datatype}]`
-                : ''}
-              )
+              <Tag minimal intent='primary'>
+                {entry.stage2.root_error_type}
+              </Tag>{' '}
+              in {entry.stage2.responsible_mapping_file}
             </div>
           )}
-          {entry.fix && entry.fix.operation !== 'add_missing_property' && (
+          {entry.stage3 && (
             <div style={{ fontSize: '0.85em' }}>
-              {entry.fix.operation}: {entry.fix.old_value} → {entry.fix.new_value}
+              repair: {entry.stage3.repair_type} --{' '}
+              {entry.stage3.corrected_triples.length} triple(s)
             </div>
           )}
           {entry.note && (

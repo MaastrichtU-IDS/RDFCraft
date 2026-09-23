@@ -1,5 +1,5 @@
-import ShapesApi from "@/lib/api/shapes_api";
 import SettingsApi from "@/lib/api/settings_api";
+import SourceApi from "@/lib/api/source_api";
 import {
   buildGenerateMappingMessages,
 } from "@/lib/llm/generateMappingPrompt";
@@ -53,7 +53,7 @@ export type AIPanelStateActions = {
     references: string[]
   ) => Promise<void>;
   sendMessage: (message: string) => Promise<void>;
-  generateMapping: (workspaceUuid: string) => Promise<void>;
+  generateMapping: () => Promise<void>;
   clear: () => void;
 };
 
@@ -203,7 +203,7 @@ const functions: ZustandActions<AIPanelStateActions, AIPanelState> = (set, get) 
     });
 
   },
-  async generateMapping(workspaceUuid: string) {
+  async generateMapping() {
     set({ isLoading: 'generating', error: null });
     try {
       const openai_url = await SettingsApi.getOpenAIURL();
@@ -223,25 +223,25 @@ const functions: ZustandActions<AIPanelStateActions, AIPanelState> = (set, get) 
         return;
       }
 
-      const shapeSets = await ShapesApi.getShapesInWorkspace(workspaceUuid).catch(
-        () => [],
-      );
-
       const openai = new OpenAI({
         apiKey: openai_key,
         baseURL: openai_url,
         dangerouslyAllowBrowser: true,
       });
 
+      const exampleRows = await SourceApi.getSourcePreview(source.uuid).catch(
+        () => [],
+      );
+
       const messages = buildGenerateMappingMessages({
         mappingName: mapping.name,
         mappingDescription: mapping.description,
         references: source.references,
         ontologies: ontologies ?? [],
-        shapesContent: shapeSets.map(shapes => shapes.content),
         prefixes: Object.fromEntries(
           (prefixes ?? []).map(p => [p.prefix, p.uri]),
         ),
+        exampleRows,
       });
 
       const completion = await openai.chat.completions.create({

@@ -35,6 +35,9 @@ const ValidationPage = () => {
   const isRepairing = useValidationPageState(state => state.isRepairing);
   const error = useValidationPageState(state => state.error);
   const iterationLog = useValidationPageState(state => state.iterationLog);
+  const correctedRmlByMapping = useValidationPageState(
+    state => state.correctedRmlByMapping,
+  );
 
   const loadWorkspace = useValidationPageState(state => state.loadWorkspace);
   const setSelectedShapeSetId = useValidationPageState(
@@ -42,6 +45,12 @@ const ValidationPage = () => {
   );
   const runValidation = useValidationPageState(state => state.runValidation);
   const runAutoRepair = useValidationPageState(state => state.runAutoRepair);
+  const cancelAutoRepair = useValidationPageState(
+    state => state.cancelAutoRepair,
+  );
+  const applyAllRepairedMappings = useValidationPageState(
+    state => state.applyAllRepairedMappings,
+  );
 
   const [maxIterations, setMaxIterations] = useState(10);
 
@@ -112,6 +121,23 @@ const ValidationPage = () => {
               onClick={() => runAutoRepair(maxIterations)}
             >
               Auto-Repair
+            </Button>
+            <Button
+              icon='stop'
+              intent='danger'
+              disabled={!isRepairing}
+              onClick={() => cancelAutoRepair()}
+            >
+              Cancel
+            </Button>
+            <Button
+              icon='tick'
+              intent='success'
+              disabled={busy || !correctedRmlByMapping}
+              title='Apply every repaired mapping from the last Auto-Repair run to its canvas (falls back to downloading the RML for any that cannot be parsed back)'
+              onClick={() => applyAllRepairedMappings()}
+            >
+              Apply
             </Button>
           </ButtonGroup>
         </Navbar.Group>

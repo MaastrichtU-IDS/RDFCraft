@@ -64,10 +64,33 @@ class YARRRMLService {
     const writer = new Writer(
       {
         format: 'application/Turtle',
-        prefixes: prefixes.reduce(
-          (acc, prefix) => ({ ...acc, [prefix.prefix]: prefix.uri }),
-          {},
-        ),
+        prefixes: {
+          // RMLGenerator always mints its internal map nodes (TriplesMap,
+          // SubjectMap, PredicateObjectMap, PredicateMap, ObjectMap, ...)
+          // under this exact, hardcoded base IRI (see
+          // @rmlio/yarrrml-parser/lib/abstract-generator.js). Registering it
+          // as the default `:` prefix keeps every node addressable as a
+          // short, stable `:map_id` -- both for readability and because the
+          // repair pipeline's Stage 2/3 prompts identify map nodes this way
+          // (see applyStage3Correction.ts).
+          '': 'http://mapping.example.com/',
+          rr: 'http://www.w3.org/ns/r2rml#',
+          rml: 'http://semweb.mmlab.be/ns/rml#',
+          ql: 'http://semweb.mmlab.be/ns/ql#',
+          rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+          xsd: 'http://www.w3.org/2001/XMLSchema#',
+          // RML-FN (see applyRmlTextCorrection.ts) -- registered here too so
+          // a mapping the repair loop has already folded a function-valued
+          // fix into still renders those prefixes compactly on the next
+          // regeneration.
+          fnml: 'http://semweb.mmlab.be/ns/fnml#',
+          fno: 'https://w3id.org/function/ontology#',
+          grel: 'http://users.ugent.be/~bjdmeest/function/grel.ttl#',
+          ...prefixes.reduce(
+            (acc, prefix) => ({ ...acc, [prefix.prefix]: prefix.uri }),
+            {},
+          ),
+        },
       }
     );
     writer.addQuads(quads);

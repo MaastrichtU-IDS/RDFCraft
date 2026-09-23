@@ -1,4 +1,5 @@
 import { DataFactory, Parser, Store } from 'n3';
+import { ClassRequirementsSummary } from './repairTypes';
 
 const { namedNode } = DataFactory;
 
@@ -98,4 +99,39 @@ export function parseShapeClassRequirements(shapesTtl: string): ClassRequirement
   }
 
   return requirements;
+}
+
+/**
+ * Reshapes parseShapeClassRequirements()'s output into the
+ * `schema_context.class_requirements` shape the Stage 3 repair prompt
+ * expects: per class, its required_properties (min_count >= 1),
+ * allowed_properties (the complete permitted set when closed, else null --
+ * no restriction), and datatype_constraints.
+ */
+export function buildClassRequirementsSummary(shapesTtl: string): ClassRequirementsSummary {
+  const requirements = parseShapeClassRequirements(shapesTtl);
+  const summary: ClassRequirementsSummary = {};
+
+  for (const [classUri, requirement] of Object.entries(requirements)) {
+    const propertyEntries = Object.entries(requirement.properties);
+
+    const datatypeConstraints: Record<string, string> = {};
+    for (const [path, propRequirement] of propertyEntries) {
+      if (propRequirement.datatype) {
+        datatypeConstraints[path] = propRequirement.datatype;
+      }
+    }
+
+    summary[classUri] = {
+      required_properties: propertyEntries
+        .filter(([, propRequirement]) => (propRequirement.min_count ?? 0) >= 1)
+        .map(([path]) => path),
+      allowed_properties: requirement.closed
+        ? propertyEntries.map(([path]) => path)
+        : null,
+      datatype_constraints: datatypeConstraints,
+    };
+  }
+
+  return summary;
 }

@@ -6,8 +6,9 @@ export interface GenerateMappingContext {
   mappingDescription: string;
   references: string[];
   ontologies: Ontology[];
-  shapesContent: string[];
   prefixes: Record<string, string>;
+  /** A few sample rows from the source, for table_preview.example_rows. */
+  exampleRows: Record<string, unknown>[];
 }
 
 /**
@@ -36,6 +37,17 @@ export interface GeneratedMapping {
   edges: GeneratedMappingEdge[];
 }
 
+/** Keeps a single example-row cell from blowing up the prompt (some source
+ * columns, e.g. free-text descriptions, can run to thousands of characters). */
+const MAX_EXAMPLE_CELL_LENGTH = 150;
+
+function truncateCell(value: unknown): unknown {
+  if (typeof value !== 'string' || value.length <= MAX_EXAMPLE_CELL_LENGTH) {
+    return value;
+  }
+  return `${value.slice(0, MAX_EXAMPLE_CELL_LENGTH)}...`;
+}
+
 export function buildGenerateMappingMessages(
   ctx: GenerateMappingContext,
 ): ChatCompletionMessageParam[] {
@@ -45,23 +57,44 @@ export function buildGenerateMappingMessages(
         .map(c => `  - ${c.full_uri}`)
         .join('\n');
       const properties = ontology.properties
-        .map(
-          p =>
-            `  - ${p.full_uri} (${p.property_type}, domain: ${p.domain.join(', ') || 'any'}, range: ${p.range.join(', ') || 'any'})`,
-        )
+        .map(p => {
+          // RDFCraft's ontology indexer doesn't currently detect OWL
+          // cardinality restrictions (owl:minCardinality/someValuesFrom),
+          // so every property is reported "optional" until that's added --
+          // this matches how a property with no declared restriction reads
+          // in practice (e.g. the SEPSES CWE ontology declares none).
+          const requirement = 'optional';
+          const kind =
+            p.property_type === 'object'
+              ? 'reference to another resource (object property)'
+              : `literal, datatype ${p.range[0] ?? 'unspecified'}`;
+          return `  - ${p.full_uri} (${kind}, ${requirement}, domain: ${p.domain.join(', ') || 'any'})`;
+        })
         .join('\n');
       return `Ontology "${ontology.name}" (${ontology.base_uri}):\nClasses:\n${classes}\nProperties:\n${properties}`;
     })
     .join('\n\n');
 
-  const shapesSummary = ctx.shapesContent
-    .map((content, i) => `Shape set #${i + 1} (Turtle):\n${content}`)
-    .join('\n\n');
+  const exampleRowsSummary = ctx.exampleRows
+    .map(row => {
+      const truncated = Object.fromEntries(
+        Object.entries(row).map(([key, value]) => [key, truncateCell(value)]),
+      );
+      return JSON.stringify(truncated);
+    })
+    .join('\n');
 
   const systemPrompt = `
-You are an RML mapping engineer. You design a mapping from a tabular data source (CSV/JSON) to RDF, for the RDFCraft tool.
+You are an RML mapping engineer.
 
-You will be given: the source's column names ("references"), any ontology classes/properties available, and optionally SHACL shapes that the resulting RDF graph should conform to.
+Task:
+
+Given a tabular data source's schema (column names) and an ontology reference (classes and their properties), design a mapping that lifts this source into RDF using the ontology's classes and properties, for the RDFCraft tool.
+
+Inputs:
+
+* table_preview: the mapping name, the exact column names of the source ("references"), and a few example_rows.
+* ontology reference: the classes available and, for each, its properties (required/optional, and whether each property takes a literal of a given datatype or a reference to another resource).
 
 You must produce a JSON object with this exact shape:
 {
@@ -92,11 +125,21 @@ You must produce a JSON object with this exact shape:
 }
 
 Rules:
+- Choose a uri_pattern for the entity node using one or more of the given column references, whichever forms a stable identifier for a row of this source.
+- Map each relevant column to a property from the ontology reference by adding an edge from the entity node to a literal or uri_ref node, choosing the rdf_type for the entity that best represents what a row of this source conceptually is.
+- For properties that are a reference to another resource (object properties), create a "uri_ref" node with a URI template that mints an IRI for the referenced resource; you do not need to give that resource its own rdf_type or outgoing edges.
+- For properties that take a literal, create a "literal" node and set literal_type to exactly the datatype URI declared for that property in the ontology reference.
+- Do not invent classes or properties outside the given ontology reference.
+- Only create edges for column references that correspond to a property of the class you chose; you do not need to map every column.
 - Only use "$(ColumnName)" placeholders where ColumnName is exactly one of the given references. Never invent column names.
-- Every entity node must have at least one outgoing edge to a literal or uri_ref node for each property that has useful column data.
-- Prefer to reuse existing ontology classes/properties when given. Only invent new URIs (using the given prefixes as a base) if nothing suitable exists.
-- If SHACL shapes are given, make sure the generated graph is likely to conform to them: include every property whose shape has "sh:minCount 1" or higher, and use exactly the datatypes/classes the shapes declare.
-- Respond with ONLY the JSON object. No markdown, no commentary, no code fences.
+- Prefer to reuse existing ontology classes/properties when given. Only invent new URIs (using the given prefixes as a base) if nothing suitable exists in the ontology reference.
+- Use example_rows only to judge each column's actual content and format (e.g. to pick a sensible XSD datatype, or to see whether a column looks empty/unstable and so unsuitable as part of the uri_pattern) -- never copy an example value itself into a template.
+
+Output rules:
+
+- Do not use markdown code fences.
+- Do not add any explanation before or after the mapping.
+- Respond with ONLY the JSON object described above.
 `.trim();
 
   const userPrompt = `
@@ -106,13 +149,14 @@ Mapping description: ${ctx.mappingDescription}
 Source column references:
 ${ctx.references.map(r => `- ${r}`).join('\n')}
 
+${exampleRowsSummary ? `Example rows:\n${exampleRowsSummary}\n` : ''}
+
 Available prefixes:
 ${Object.entries(ctx.prefixes)
   .map(([prefix, uri]) => `- ${prefix}: ${uri}`)
   .join('\n')}
 
 ${ontologySummary ? `Ontology context:\n${ontologySummary}\n` : ''}
-${shapesSummary ? `SHACL shapes to conform to:\n${shapesSummary}\n` : ''}
 
 Generate the mapping JSON now.
 `.trim();

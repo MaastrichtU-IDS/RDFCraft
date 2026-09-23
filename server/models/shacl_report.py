@@ -11,16 +11,20 @@ class ShaclViolation:
         result_path (str): The predicate/path the violation occurred on, if any
         source_constraint_component (str): The SHACL constraint component that was violated
         value (str): The offending value, if any
+        value_type (str): "iri" | "string" | "literal" | "unknown", the RDF term kind of `value`
         message (str): The human-readable violation message
         severity (str): The SHACL severity (sh:Violation, sh:Warning, sh:Info)
+        source_shape (str): The IRI of the specific shape (e.g. a sh:PropertyShape) that failed, if any
     """
 
     focus_node: str = ""
     result_path: str = ""
     source_constraint_component: str = ""
     value: str = ""
+    value_type: str = "unknown"
     message: str = ""
     severity: str = ""
+    source_shape: str = ""
 
     def to_dict(self):
         return {
@@ -28,8 +32,10 @@ class ShaclViolation:
             "result_path": self.result_path,
             "source_constraint_component": self.source_constraint_component,
             "value": self.value,
+            "value_type": self.value_type,
             "message": self.message,
             "severity": self.severity,
+            "source_shape": self.source_shape,
         }
 
     @classmethod
@@ -39,8 +45,10 @@ class ShaclViolation:
             result_path=data.get("result_path", ""),
             source_constraint_component=data.get("source_constraint_component", ""),
             value=data.get("value", ""),
+            value_type=data.get("value_type", "unknown"),
             message=data.get("message", ""),
             severity=data.get("severity", ""),
+            source_shape=data.get("source_shape", ""),
         )
 
 

@@ -29,6 +29,12 @@ const MappingRow = ({ mapping }: MappingRowProps) => {
   const runAutoRepairForMapping = useValidationPageState(
     state => state.runAutoRepairForMapping,
   );
+  const cancelAutoRepairForMapping = useValidationPageState(
+    state => state.cancelAutoRepairForMapping,
+  );
+  const applyRepairedMapping = useValidationPageState(
+    state => state.applyRepairedMapping,
+  );
 
   const [expanded, setExpanded] = useState(false);
   const [maxIterations, setMaxIterations] = useState(10);
@@ -37,6 +43,7 @@ const MappingRow = ({ mapping }: MappingRowProps) => {
   const isRepairing = perMapping?.isRepairing ?? false;
   const report = perMapping?.report ?? null;
   const iterationLog = perMapping?.iterationLog ?? [];
+  const correctedRml = perMapping?.correctedRml ?? null;
   const busy = isLoading !== null || isRepairing;
 
   return (
@@ -88,6 +95,25 @@ const MappingRow = ({ mapping }: MappingRowProps) => {
             }}
           >
             Auto-Repair
+          </Button>
+          <Button
+            small
+            icon='stop'
+            intent='danger'
+            disabled={!isRepairing}
+            onClick={() => cancelAutoRepairForMapping(mapping.uuid)}
+          >
+            Cancel
+          </Button>
+          <Button
+            small
+            icon='tick'
+            intent='success'
+            disabled={busy || !correctedRml}
+            title='Apply the repaired mapping to this table’s canvas (falls back to downloading the RML if it cannot be parsed back)'
+            onClick={() => applyRepairedMapping(mapping.uuid)}
+          >
+            Apply
           </Button>
         </ButtonGroup>
       </div>

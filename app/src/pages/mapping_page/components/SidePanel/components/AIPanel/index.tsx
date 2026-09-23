@@ -89,7 +89,7 @@ const AIPanel = () => {
       return;
     }
     if (workspaceUuid) {
-      generateMapping(workspaceUuid);
+      generateMapping();
     }
   };
 
@@ -101,7 +101,7 @@ const AIPanel = () => {
         onConfirm={() => {
           setConfirmGenerate(false);
           if (workspaceUuid) {
-            generateMapping(workspaceUuid);
+            generateMapping();
           }
         }}
         title='Overwrite mapping?'

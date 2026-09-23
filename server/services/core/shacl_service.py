@@ -13,6 +13,13 @@ from server.service_protocols.shacl_service_protocol import (
     ShaclServiceProtocol,
 )
 
+# Preserve original literal spelling instead of normalizing valid values, and
+# suppress rdflib warnings for intentionally-invalid typed literals (e.g. a
+# DatatypeConstraintComponent violation reporting "HOME"^^xsd:long as its
+# sh:value) -- both are expected inputs when reading a validation report.
+rdflib.NORMALIZE_LITERALS = False
+logging.getLogger("rdflib.term").setLevel(logging.ERROR)
+
 SH = Namespace("http://www.w3.org/ns/shacl#")
 
 
@@ -115,6 +122,20 @@ class ShaclService(ShaclServiceProtocol):
             value = results_graph.value(node, SH.value)
             message = results_graph.value(node, SH.resultMessage)
             severity = results_graph.value(node, SH.resultSeverity)
+            source_shape = results_graph.value(node, SH.sourceShape)
+
+            if value is None:
+                observed_value, value_type = "", "unknown"
+            elif isinstance(value, rdflib.URIRef):
+                observed_value, value_type = str(value), "iri"
+            elif isinstance(value, rdflib.Literal):
+                observed_value = str(value)
+                is_string_typed = value.datatype is None or str(
+                    value.datatype
+                ) == "http://www.w3.org/2001/XMLSchema#string"
+                value_type = "string" if is_string_typed else "literal"
+            else:
+                observed_value, value_type = str(value), "unknown"
 
             violations.append(
                 ShaclViolation(
@@ -123,9 +144,11 @@ class ShaclService(ShaclServiceProtocol):
                     source_constraint_component=str(constraint_component)
                     if constraint_component is not None
                     else "",
-                    value=str(value) if value is not None else "",
+                    value=observed_value,
+                    value_type=value_type,
                     message=str(message) if message is not None else "",
                     severity=str(severity) if severity is not None else "",
+                    source_shape=str(source_shape) if source_shape is not None else "",
                 )
             )
 
