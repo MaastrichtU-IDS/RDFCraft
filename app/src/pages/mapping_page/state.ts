@@ -51,6 +51,7 @@ interface MappingPageStateActions {
   ) => void;
   setIsSidePanelCollapsed: (isSidePanelCollapsed: boolean) => void;
   setLoading: (isLoading: string | null) => void;
+  setMapping: (mapping: MappingGraph) => void;
 }
 
 const defaultState: MappingPageState = {
@@ -178,6 +179,9 @@ const functions: ZustandActions<MappingPageStateActions, MappingPageState> = (
   },
   setLoading(isLoading: string | null) {
     set({ isLoading });
+  },
+  setMapping(mapping: MappingGraph) {
+    set({ mapping, isSaved: false });
   },
 });
 

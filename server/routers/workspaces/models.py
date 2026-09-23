@@ -34,6 +34,12 @@ class CreateOntologyInput(BaseModel):
     content: Base64UrlStr
 
 
+class CreateShapesInput(BaseModel):
+    name: str
+    description: str
+    content: Base64UrlStr
+
+
 class CreateMappingInput(BaseModel):
     name: str
     description: str

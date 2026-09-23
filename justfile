@@ -6,7 +6,16 @@ install:
     @echo "Creating virtual environment..."
     uv sync
 
-test: install-dev
+# Builds the shacl-validator CLI from source (github.com/ensaremirerol/shacl-rust) --
+# no prebuilt binary is published upstream, unlike RMLMapper's jar.
+build-shacl-validator:
+    @echo "Building shacl-validator..."
+    mkdir -p bin
+    cargo install shacl-cli --root /tmp/shacl-cli-install
+    cp /tmp/shacl-cli-install/bin/shacl-validator bin/shacl-validator
+    chmod +x bin/shacl-validator
+
+test: install-dev build-shacl-validator
     @echo "Running tests..."
     uv run coverage run -m unittest discover -v -s ./test -p "*_test.py"
 
@@ -17,6 +26,7 @@ package-mac: install-dev
     @echo "Downloading external binaries..."
     mkdir -p bin
     curl -L https://github.com/RMLio/rmlmapper-java/releases/download/v7.3.3/rmlmapper-7.3.3-r374-all.jar -o bin/mapper.jar
+    just build-shacl-validator
     npm run frontend:prod
     uv sync
     uv run nuitka \
@@ -52,6 +62,7 @@ package-win: install-dev
     @echo "Downloading external binaries..."
     mkdir -p bin
     curl -L https://github.com/RMLio/rmlmapper-java/releases/download/v7.3.3/rmlmapper-7.3.3-r374-all.jar -o bin/mapper.jar
+    just build-shacl-validator
     npm run frontend:prod
     uv sync
     .venv/Scripts/python -m nuitka \

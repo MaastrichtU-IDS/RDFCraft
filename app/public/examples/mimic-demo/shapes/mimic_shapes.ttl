@@ -1,0 +1,154 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Adapted from clustered-kg-refine's baseline-exp/data/clustering_output_MIMIC-170/shacl/generated_shacl.ttl
+# (structural shapes only, no patient data) -- trimmed to match the bundled synthetic
+# MIMIC-shaped example (PATIENTS / ADMISSIONS / DIAGNOSES_ICD / CPTEVENTS).
+# Classes/properties are from the public SPHN/AIDAVA ontology (https://biomedit.ch/rdf/sphn-ontology/).
+
+# ─── Template A: closed shapes per class (completeness + entity-type / predicate checks) ───
+
+<http://example.org/shapes/closed/patient> a sh:NodeShape ;
+    sh:targetClass <https://biomedit.ch/rdf/sphn-ontology/AIDAVA/Patient> ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/AIDAVA/hasAdministrativeGender> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The Patient needs to have at least 1 hasAdministrativeGender" ;
+    ] ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/AIDAVA/hasBirthDateTime> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The Patient needs to have at least 1 hasBirthDateTime" ;
+    ] ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasIdentifier> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The Patient needs to have at least 1 hasIdentifier" ;
+    ] .
+
+<http://example.org/shapes/closed/administrative_case> a sh:NodeShape ;
+    sh:targetClass <https://biomedit.ch/rdf/sphn-ontology/sphn#AdministrativeCase> ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/AIDAVA/hasPatient> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The AdministrativeCase needs to have at least 1 hasPatient" ;
+    ] ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasAdmissionDateTime> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The AdministrativeCase needs to have at least 1 hasAdmissionDateTime" ;
+    ] ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasDischargeDateTime> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The AdministrativeCase needs to have at least 1 hasDischargeDateTime" ;
+    ] ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasIdentifier> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The AdministrativeCase needs to have at least 1 hasIdentifier" ;
+    ] .
+
+<http://example.org/shapes/closed/problem_condition> a sh:NodeShape ;
+    sh:targetClass <https://biomedit.ch/rdf/sphn-ontology/sphn#ProblemCondition> ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasAdministrativeCase> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The ProblemCondition needs to have at least 1 hasAdministrativeCase" ;
+    ] ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasCode> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The ProblemCondition needs to have at least 1 hasCode" ;
+    ] .
+
+<http://example.org/shapes/closed/procedure> a sh:NodeShape ;
+    sh:targetClass <https://biomedit.ch/rdf/sphn-ontology/sphn#Procedure> ;
+    sh:closed true ;
+    sh:ignoredProperties ( rdf:type ) ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasAdministrativeCase> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The Procedure needs to have at least 1 hasAdministrativeCase" ;
+    ] ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasCode> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The Procedure needs to have at least 1 hasCode" ;
+    ] ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasStartDateTime> ;
+        sh:minCount 1 ;
+        sh:message "category:Missing essential variable", "dimension:Completeness",
+            "message:The Procedure needs to have at least 1 hasStartDateTime" ;
+    ] .
+
+# ─── Template B: literal datatype checks (detects change_datatype errors) ───
+
+<http://example.org/shapes/literal_datatype/patient_birthdatetime> a sh:NodeShape ;
+    sh:targetClass <https://biomedit.ch/rdf/sphn-ontology/AIDAVA/Patient> ;
+    sh:message "category:Wrong datatype for property", "dimension:Consistency",
+        "message:A hasBirthDateTime for Patient should take only dateTime type" ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/AIDAVA/hasBirthDateTime> ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+    ] .
+
+<http://example.org/shapes/literal_datatype/patient_identifier> a sh:NodeShape ;
+    sh:targetClass <https://biomedit.ch/rdf/sphn-ontology/AIDAVA/Patient> ;
+    sh:message "category:Wrong datatype for property", "dimension:Consistency",
+        "message:A hasIdentifier for Patient should take only string type" ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasIdentifier> ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] .
+
+<http://example.org/shapes/literal_datatype/admission_datetime> a sh:NodeShape ;
+    sh:targetClass <https://biomedit.ch/rdf/sphn-ontology/sphn#AdministrativeCase> ;
+    sh:message "category:Wrong datatype for property", "dimension:Consistency",
+        "message:A hasAdmissionDateTime for AdministrativeCase should take only dateTime type" ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasAdmissionDateTime> ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+    ] .
+
+<http://example.org/shapes/literal_datatype/discharge_datetime> a sh:NodeShape ;
+    sh:targetClass <https://biomedit.ch/rdf/sphn-ontology/sphn#AdministrativeCase> ;
+    sh:message "category:Wrong datatype for property", "dimension:Consistency",
+        "message:A hasDischargeDateTime for AdministrativeCase should take only dateTime type" ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasDischargeDateTime> ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+    ] .
+
+<http://example.org/shapes/literal_datatype/procedure_startdatetime> a sh:NodeShape ;
+    sh:targetClass <https://biomedit.ch/rdf/sphn-ontology/sphn#Procedure> ;
+    sh:message "category:Wrong datatype for property", "dimension:Consistency",
+        "message:A hasStartDateTime for Procedure should take only dateTime type" ;
+    sh:property [
+        sh:path <https://biomedit.ch/rdf/sphn-ontology/sphn#hasStartDateTime> ;
+        sh:datatype xsd:dateTime ;
+        sh:minCount 1 ;
+    ] .

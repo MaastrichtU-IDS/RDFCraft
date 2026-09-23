@@ -16,7 +16,14 @@ COPY ./app/src ./src
 
 RUN npm run build
 
-# Stage 2: Backend and Final Image
+# Stage 2: Build shacl-validator (no prebuilt binary is published upstream)
+FROM rust:alpine AS shacl-builder
+
+RUN apk add --no-cache musl-dev
+
+RUN cargo install shacl-cli --root /out
+
+# Stage 3: Backend and Final Image
 FROM ghcr.io/astral-sh/uv:python3.11-alpine
 
 # Set working directory
@@ -29,9 +36,12 @@ RUN apk add --no-cache openjdk17-jdk curl && \
 # Download RMLMapper
 ADD https://github.com/RMLio/rmlmapper-java/releases/download/v7.3.3/rmlmapper-7.3.3-r374-all.jar /app/bin/mapper.jar
 
+# Copy the shacl-validator binary built in the shacl-builder stage
+COPY --from=shacl-builder /out/bin/shacl-validator /app/bin/shacl-validator
+
 # Set root for installation and changing permissions
 USER root
-RUN chmod +x /app/bin/mapper.jar
+RUN chmod +x /app/bin/mapper.jar /app/bin/shacl-validator
 
 # Copy the backend dependencies and install
 COPY ./pyproject.toml ./uv.lock ./.python-version ./

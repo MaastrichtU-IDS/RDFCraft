@@ -19,6 +19,7 @@ from uvicorn.protocols.utils import (
 from bootstrap import bootstrap, teardown
 from server.routers.rml.rml import router as rml_router
 from server.routers.settings.settings import router as settings_router
+from server.routers.shacl.shacl import router as shacl_router
 from server.routers.sources.sources import (
     router as sources_router,
 )
@@ -141,6 +142,11 @@ app.include_router(
     settings_router,
     prefix="/api/settings",
     tags=["settings"],
+)
+app.include_router(
+    shacl_router,
+    prefix="/api/shacl",
+    tags=["shacl"],
 )
 
 current_dir = Path(__file__).parent.parent

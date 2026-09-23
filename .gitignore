@@ -412,7 +412,7 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/python,venv,macos,windows,linux,react,node
 
 
-public/
+/public/
 !server/services/local/
 !test/services/local/
 !app/src/lib/

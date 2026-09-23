@@ -42,6 +42,9 @@ from server.facades.workspace.mapping.import_mapping_in_workspace_facade import 
 from server.facades.workspace.mapping.mapping_to_yarrrml_facade import (
     MappingToYARRRMLFacade,
 )
+from server.facades.workspace.mapping.mapping_to_yarrrml_preview_facade import (
+    MappingToYARRRMLPreviewFacade,
+)
 from server.facades.workspace.mapping.update_mapping_facade import (
     UpdateMappingFacade,
 )
@@ -57,6 +60,15 @@ from server.facades.workspace.ontology.get_ontologies_in_workspace_facade import
 from server.facades.workspace.prefix.create_prefix_in_workspace_facade import (
     CreatePrefixInWorkspaceFacade,
 )
+from server.facades.workspace.shapes.create_shapes_in_workspace_facade import (
+    CreateShapesInWorkspaceFacade,
+)
+from server.facades.workspace.shapes.delete_shapes_from_workspace_facade import (
+    DeleteShapesFromWorkspaceFacade,
+)
+from server.facades.workspace.shapes.get_shapes_in_workspace_facade import (
+    GetShapesInWorkspaceFacade,
+)
 from server.facades.workspace.prefix.delete_prefix_from_workspace_facade import (
     DeletePrefixFromWorkspaceFacade,
 )
@@ -65,12 +77,14 @@ from server.facades.workspace.prefix.get_prefixes_in_workspace_facade import (
 )
 from server.models.mapping import MappingGraph
 from server.models.ontology import Ontology
+from server.models.shapes import ShapeSet
 from server.models.workspace import WorkspaceModel
 from server.routers.models import BasicResponse
 from server.routers.workspaces.models import (
     CreateMappingInput,
     CreateOntologyInput,
     CreatePrefixInput,
+    CreateShapesInput,
     CreateWorkspaceInput,
 )
 
@@ -132,6 +146,21 @@ DeleteOntologyFromWorkspaceDep = Annotated[
     Depends(lambda: di[DeleteOntologyFromWorkspaceFacade]),
 ]
 
+GetShapesInWorkspaceFacadeDep = Annotated[
+    GetShapesInWorkspaceFacade,
+    Depends(lambda: di[GetShapesInWorkspaceFacade]),
+]
+
+CreateShapesInWorkspaceDep = Annotated[
+    CreateShapesInWorkspaceFacade,
+    Depends(lambda: di[CreateShapesInWorkspaceFacade]),
+]
+
+DeleteShapesFromWorkspaceDep = Annotated[
+    DeleteShapesFromWorkspaceFacade,
+    Depends(lambda: di[DeleteShapesFromWorkspaceFacade]),
+]
+
 CreateMappingInWorkspaceDep = Annotated[
     CreateMappingInWorkspaceFacade,
     Depends(lambda: di[CreateMappingInWorkspaceFacade]),
@@ -165,6 +194,11 @@ ImportMappingInWorkspaceDep = Annotated[
 MappingToYARRRMLDep = Annotated[
     MappingToYARRRMLFacade,
     Depends(lambda: di[MappingToYARRRMLFacade]),
+]
+
+MappingToYARRRMLPreviewDep = Annotated[
+    MappingToYARRRMLPreviewFacade,
+    Depends(lambda: di[MappingToYARRRMLPreviewFacade]),
 ]
 
 
@@ -426,6 +460,70 @@ async def delete_ontology(
     )
 
 
+@router.get("/{workspace_id}/shapes")
+async def get_shapes(
+    workspace_id: str,
+    get_shapes_in_workspace_facade: GetShapesInWorkspaceFacadeDep,
+) -> list[ShapeSet]:
+    facade_response = get_shapes_in_workspace_facade.execute(
+        workspace_id=workspace_id,
+    )
+
+    if facade_response.status // 100 == 2:
+        return facade_response.data or []
+
+    raise HTTPException(
+        status_code=facade_response.status,
+        detail=facade_response.to_dict(),
+    )
+
+
+@router.post("/{workspace_id}/shapes", status_code=201)
+async def create_shapes(
+    workspace_id: str,
+    data: CreateShapesInput,
+    create_shapes_in_workspace_facade: CreateShapesInWorkspaceDep,
+) -> BasicResponse:
+    facade_response = create_shapes_in_workspace_facade.execute(
+        workspace_id=workspace_id,
+        name=data.name,
+        description=data.description,
+        content=data.content.encode(),
+    )
+
+    if facade_response.status // 100 == 2:
+        return BasicResponse(
+            message=facade_response.message,
+        )
+
+    raise HTTPException(
+        status_code=facade_response.status,
+        detail=facade_response.to_dict(),
+    )
+
+
+@router.delete("/{workspace_id}/shapes/{shapes_id}")
+async def delete_shapes(
+    workspace_id: str,
+    shapes_id: str,
+    delete_shapes_from_workspace_facade: DeleteShapesFromWorkspaceDep,
+) -> BasicResponse:
+    facade_response = delete_shapes_from_workspace_facade.execute(
+        workspace_id=workspace_id,
+        shapes_id=shapes_id,
+    )
+
+    if facade_response.status // 100 == 2:
+        return BasicResponse(
+            message=facade_response.message,
+        )
+
+    raise HTTPException(
+        status_code=facade_response.status,
+        detail=facade_response.to_dict(),
+    )
+
+
 @router.get("/{workspace_id}/mapping")
 async def get_mappings(
     workspace_id: str,
@@ -598,6 +696,29 @@ async def mapping_to_yarrrml(
     facade_response = mapping_to_yarrrml_facade.execute(
         workspace_id=workspace_id,
         mapping_id=mapping_id,
+    )
+
+    if facade_response.status // 100 == 2 and facade_response.data:
+        return facade_response.data
+
+    raise HTTPException(
+        status_code=facade_response.status,
+        detail=facade_response.to_dict(),
+    )
+
+
+@router.post(
+    "/{workspace_id}/mapping/yarrrml-preview",
+    response_class=PlainTextResponse,
+)
+async def mapping_to_yarrrml_preview(
+    workspace_id: str,
+    data: MappingGraph,
+    mapping_to_yarrrml_preview_facade: MappingToYARRRMLPreviewDep,
+) -> str:
+    facade_response = mapping_to_yarrrml_preview_facade.execute(
+        workspace_id=workspace_id,
+        mapping=data,
     )
 
     if facade_response.status // 100 == 2 and facade_response.data:
