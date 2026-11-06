@@ -1,6 +1,5 @@
 - [RDFCraft](/#RDFCraft)
   - [Features](/#Features-🌟)
-    - [AI Mapping Assistant](/#AI-Mapping-Assistant-🤖)
   - [Requirements](/#Requirements-📦)
   - [Installation](/#Installation-🚀)
   - [Getting Started](/#Getting-Started-🚦)

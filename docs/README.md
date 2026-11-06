@@ -6,6 +6,8 @@ single executable using Nuitka.
 
 ![RDFCraft Mapping Interface](imgs/1.png)
 
+![AI Mapping Assistant: generate, validate and auto-repair a FOAF mapping](imgs/ai-mapping-demo.gif)
+
 ## Features 🌟
 
 - **Easy to use GUI**: Just upload your csv/json file and start mapping your
@@ -27,10 +29,6 @@ single executable using Nuitka.
 - **AI Mapping Assistant**: Generates a mapping from your source and ontology
   with an LLM, validates it against your SHACL shapes and auto-repairs
   violations.
-
-### AI Mapping Assistant 🤖
-
-![AI Mapping Assistant: generate, validate and auto-repair a FOAF mapping](imgs/ai-mapping-demo.gif)
 
 ## Requirements 📦
 
