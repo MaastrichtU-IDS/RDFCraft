@@ -1,7 +1,9 @@
 import { MappingGraph } from '@/lib/api/mapping_service/types';
 import { Ontology } from '@/lib/api/ontology_api/types';
 import { Prefix } from '@/lib/api/prefix_api/types';
+import SourceApi from '@/lib/api/source_api';
 import YARRRMLService from '@/lib/api/yarrrml_service';
+import { groupRmlBySubject } from './applyRmlTextCorrection';
 
 export interface RmlMappingContext {
   /** Every mapping's RML text concatenated, each preceded by a file-header comment. */
@@ -36,7 +38,7 @@ export async function buildRmlMappingContext(
         workspaceUuid,
         mapping,
       );
-      const rml = await YARRRMLService.yarrrmlToRML(yarrrml, prefixes);
+      const rml = groupRmlBySubject(await YARRRMLService.yarrrmlToRML(yarrrml, prefixes));
       return { mapping, rml };
     }),
   );
@@ -81,4 +83,23 @@ export function buildAllowedEntityTypes(ontologies: Ontology[]): string[] {
     }
   }
   return Array.from(classes);
+}
+
+/**
+ * `schema_context.source_columns`: each mapping file's source column names.
+ * Without these, a repair that adds a property has to guess column names from
+ * the references already in the RML (e.g. inventing `family_name` when the
+ * column is `last_name`), producing a fix that maps nothing.
+ */
+export async function buildSourceColumns(
+  mappings: MappingGraph[],
+  mappingUuidToFileName: Record<string, string>,
+): Promise<Record<string, string[]>> {
+  const entries = await Promise.all(
+    mappings.map(async mapping => {
+      const source = await SourceApi.getSource(mapping.source_id);
+      return [mappingUuidToFileName[mapping.uuid] ?? mapping.uuid, source.references] as const;
+    }),
+  );
+  return Object.fromEntries(entries);
 }

@@ -16,7 +16,7 @@ import { applyRmlTextCorrection, RmlPatchError } from '@/lib/llm/applyRmlTextCor
 import { buildLocateFixMessages } from '@/lib/llm/locateFixPrompt';
 import { buildClassRequirementsSummary } from '@/lib/llm/parseShapeClassRequirements';
 import { buildProposeRepairMessages } from '@/lib/llm/proposeRepairPrompt';
-import { getAllowedRepairTypes } from '@/lib/llm/repairGuards';
+import { getAllowedRepairTypes, losesSubjects } from '@/lib/llm/repairGuards';
 import {
   IterationLogEntry,
   PriorAttempt,
@@ -29,6 +29,7 @@ import { parseRmlToMappingGraph, RmlParseError } from '@/lib/llm/rmlToMappingGra
 import {
   buildAllowedEntityTypes,
   buildRmlMappingContext,
+  buildSourceColumns,
   concatenateRmlMapping,
   RmlMappingContext,
 } from '@/lib/llm/rmlMappingContext';
@@ -339,6 +340,7 @@ async function runRepairLoop(params: RepairLoopParams): Promise<RepairLoopResult
   const schemaContext: SchemaContext = {
     allowed_entity_types: buildAllowedEntityTypes(ontologies),
     class_requirements: buildClassRequirementsSummary(shapeSetContent),
+    source_columns: await buildSourceColumns(allMappings, rmlContext.mappingUuidToFileName),
   };
 
   const familyAttempts: Record<string, number> = {};
@@ -347,6 +349,9 @@ async function runRepairLoop(params: RepairLoopParams): Promise<RepairLoopResult
   // `reverted_attempts[-3:]`.
   const revertedAttempts: PriorAttempt[] = [];
   const log: IterationLogEntry[] = [];
+  // Only mappings with an accepted fix are returned for Apply -- otherwise
+  // Apply would round-trip unchanged RML back onto the canvas.
+  const patchedMappingUuids = new Set<string>();
 
   for (let iteration = 1; iteration <= maxIterations; iteration++) {
     if (report.conforms || signal.aborted) break;
@@ -451,7 +456,16 @@ async function runRepairLoop(params: RepairLoopParams): Promise<RepairLoopResult
       );
       entry.violationsAfter = candidateReport.violations.length;
 
-      if (candidateReport.violations.length < violationsBefore) {
+      if (losesSubjects(ttlCache[mappingUuid] ?? '', newTtl)) {
+        entry.accepted = false;
+        entry.note =
+          'Patched mapping produces fewer resources than before (the fix broke the mapping), reverted';
+        revertedAttempts.push({
+          constraint_component: stage1.constraint_component,
+          forbidden_predicate: stage1.forbidden_predicate,
+          repair_type_tried: stage3.repair_type,
+        });
+      } else if (candidateReport.violations.length < violationsBefore) {
         rmlContext.rmlByMapping[mappingUuid] = patchedRml;
         rmlContext.rml_mapping = concatenateRmlMapping(
           rmlContext.rmlByMapping,
@@ -459,6 +473,7 @@ async function runRepairLoop(params: RepairLoopParams): Promise<RepairLoopResult
         );
         ttlCache = candidateTtlCache;
         report = candidateReport;
+        patchedMappingUuids.add(mappingUuid);
         entry.accepted = true;
       } else {
         entry.accepted = false;
@@ -490,7 +505,9 @@ async function runRepairLoop(params: RepairLoopParams): Promise<RepairLoopResult
   return {
     finalReport: report,
     finalTtlCache: ttlCache,
-    correctedRmlByMapping: rmlContext.rmlByMapping,
+    correctedRmlByMapping: Object.fromEntries(
+      [...patchedMappingUuids].map(uuid => [uuid, rmlContext.rmlByMapping[uuid]]),
+    ),
     log,
   };
 }
@@ -604,7 +621,10 @@ const functions: ZustandActions<
         report: result.finalReport,
         ttlCache: result.finalTtlCache,
         iterationLog: result.log,
-        correctedRmlByMapping: result.correctedRmlByMapping,
+        correctedRmlByMapping:
+          Object.keys(result.correctedRmlByMapping).length > 0
+            ? result.correctedRmlByMapping
+            : null,
       });
     } catch (error) {
       if (!(error instanceof RepairCancelledError) && error instanceof Error) {

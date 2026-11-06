@@ -12,7 +12,7 @@ Inputs:
 
 * stage2_output: the JSON object produced by Stage 2.
 * rml_mapping: the complete set of noisy RML mappings.
-* schema_context: the closed vocabulary of entity-type (class) IRIs used by this mapping, under schema_context.allowed_entity_types. When available, schema_context.class_requirements gives, for each class with a known SHACL shape, its required_properties (properties that class's instances must have), allowed_properties (the complete permitted set if closed=true; any other property is disallowed), and datatype_constraints.
+* schema_context: the closed vocabulary of entity-type (class) IRIs used by this mapping, under schema_context.allowed_entity_types. When available, schema_context.class_requirements gives, for each class with a known SHACL shape, its required_properties (properties that class's instances must have), allowed_properties (the complete permitted set if closed=true; any other property is disallowed), and datatype_constraints. schema_context.source_columns lists, per mapping file name, the exact column names available in that file's source data.
 
 Core rules:
 
@@ -36,6 +36,7 @@ Correction rules:
 * When choosing between candidate classes for an entity-type correction, and schema_context.class_requirements is available: identify the other predicate-object maps already present in the SAME triples map as the erroneous object map (this tells you which properties the entity actually has). Prefer the candidate class whose required_properties are exactly satisfied by those properties, and whose allowed_properties (if closed=true) are not violated by them. Do not pick a class solely because it "sounds" related to the domain (e.g. a class used for a different, merely similar-sounding field) if its required_properties do not match.
 * If class_requirements does not resolve the choice uniquely (e.g. the class has no known SHACL shape, or more than one candidate fits), fall back to preferring the class already used by an analogous triples map in rml_mapping for the same subject/domain (e.g. a sibling object map).
 * Do not invent an IRI, column, datatype, or template that is not supported by the mapping or Stage 2 evidence.
+* Every column you reference (rml:reference values and {column} placeholders in rr:template) MUST be one of schema_context.source_columns for the responsible mapping file, spelled exactly. If no listed column holds the needed value, do not add the property.
 * If the correction removes a line, return "" at that position.
 * If the correction adds a line, include the new line in order.
 * rr:predicateMap, rr:objectMap, and rr:subjectMap must each point to a node that is itself declared \`a rr:PredicateMap\` / \`rr:ObjectMap\` / \`rr:SubjectMap\` and carries its own rr:constant, rr:template, or rr:reference. Never assign a bare IRI, literal, or column name directly as a value of a \`*Map\` property -- this parses as valid Turtle but crashes the RML processor.
@@ -74,7 +75,7 @@ Repair type classification:
   - change_predicate: the corrected triple replaces a PredicateMap's rr:constant property IRI; the ObjectMap is untouched.
   - change_datatype: the corrected triple replaces an ObjectMap's rr:datatype only; its rml:reference or rr:template value-construction is unchanged.
   - reformat_literal_value: the corrected triple replaces an ObjectMap's rml:reference or rr:template value itself; rr:datatype is unchanged.
-  - add_missing_property: the correction adds an entirely new PredicateObjectMap (with its own PredicateMap and ObjectMap) that did not exist anywhere in the noisy mapping.
+  - add_missing_property: the correction adds an entirely new PredicateObjectMap (with its own PredicateMap and ObjectMap) that did not exist anywhere in the noisy mapping. The corrected_triples entry must contain BOTH the TriplesMap's full statement with the new node added to its rr:predicateObjectMap list AND, in the same string, complete statements defining every new node it introduces (the PredicateObjectMap with its rr:predicateMap and rr:objectMap, the PredicateMap with its rr:constant, and the ObjectMap with its rml:reference/rr:template and datatype). A link to a node that is never defined is rejected.
   - delete_property: the correction removes an existing PredicateObjectMap entirely (its corrected_triples entry is "" at that position) -- use this when the erroneous property is spurious and has no valid replacement value, only for a disallowed property that should not exist at all.
   - change_termtype: the corrected triple replaces an ObjectMap's rr:termType (rr:Literal <-> rr:IRI), together with the matching rml:reference/rr:template and rr:datatype adjustment described above.
   - change_subject_key: the corrected triple replaces a SubjectMap's rr:template to key on a different column, per the grounding rule above.
