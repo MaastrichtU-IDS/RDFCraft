@@ -7,14 +7,11 @@ import {
 } from '@/lib/api/mapping_service/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GeneratedMapping } from './generateMappingPrompt';
-
-const GRID_COLUMNS = 4;
-const X_SPACING = 320;
-const Y_SPACING = 160;
+import { layoutMappingGraph } from './layoutMappingGraph';
 
 /**
  * Converts the LLM's compact wire format (see GeneratedMapping) into a real
- * MappingGraph: assigns XYFlow-compatible positions, derives each entity's
+ * MappingGraph: assigns XYFlow positions via layoutMappingGraph, derives each entity's
  * `properties` handle list from its outgoing edges, and derives each edge's
  * source_handle (the predicate) / target_handle (the target node's own id) --
  * see EntityNode/LiteralNode/URIRefNode, whose target handle id is always
@@ -60,12 +57,9 @@ export function normalizeGeneratedMapping(
   }
 
   const nodes: (MappingNode | MappingLiteral | MappingURIRef)[] =
-    generated.nodes.map((node, index) => {
+    generated.nodes.map(node => {
       const id = resolveId(node.id);
-      const position = {
-        x: (index % GRID_COLUMNS) * X_SPACING,
-        y: Math.floor(index / GRID_COLUMNS) * Y_SPACING,
-      };
+      const position = { x: 0, y: 0 };
 
       switch (node.kind) {
         case 'entity':
@@ -117,12 +111,20 @@ export function normalizeGeneratedMapping(
     })
     .filter(edge => nodeIds.has(edge.source) && nodeIds.has(edge.target));
 
-  return {
+  // A literal/uri_ref is only ever emitted as the object of an edge, so one
+  // that nothing points to maps nothing -- it's an LLM leftover (e.g. a column
+  // it wanted to link but found no fitting ontology property for).
+  const edgeTargets = new Set(edges.map(edge => edge.target));
+  const connectedNodes = nodes.filter(
+    node => node.type === 'entity' || edgeTargets.has(node.id),
+  );
+
+  return layoutMappingGraph({
     uuid: existing.uuid,
     name: existing.name,
     description: existing.description,
     source_id: existing.source_id,
-    nodes,
+    nodes: connectedNodes,
     edges,
-  };
+  });
 }
