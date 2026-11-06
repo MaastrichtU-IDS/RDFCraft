@@ -34,10 +34,19 @@ const Navbar = ({
   const nodes = useNodes<XYNodeTypes>();
   const edges = useEdges<XYEdgeType>();
 
-  const onSave = useCallback(() => {
+  const onSave = useCallback(async () => {
     if (!workspace_uuid || !mapping_uuid || !mapping) return;
-    saveMapping(workspace_uuid, mapping_uuid, mapping, nodes, edges);
+    await saveMapping(workspace_uuid, mapping_uuid, mapping, nodes, edges);
   }, [nodes, edges, mapping, saveMapping, workspace_uuid, mapping_uuid]);
+
+  // Validation runs on the persisted mapping, so save pending edits first.
+  const onValidate = useCallback(async () => {
+    if (!isSaved) {
+      await onSave();
+      if (!useMappingPage.getState().isSaved) return;
+    }
+    navigation(`/workspaces/${workspace_uuid}/validate?mapping=${mapping_uuid}`);
+  }, [isSaved, onSave, navigation, workspace_uuid, mapping_uuid]);
 
   return (
     <BPNavbar fixedToTop>
@@ -65,6 +74,13 @@ const Navbar = ({
             intent={isSaved ? 'success' : 'warning'}
           >
             Save
+          </Button>
+          <Button
+            icon='shield'
+            onClick={onValidate}
+            title='Save and validate this mapping against the workspace SHACL shapes'
+          >
+            Validate
           </Button>
           <Button icon='rocket' onClick={onCompleteMapping}>
             Map

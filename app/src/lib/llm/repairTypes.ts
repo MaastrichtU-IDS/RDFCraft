@@ -58,6 +58,8 @@ export type ClassRequirementsSummary = Record<string, ClassRequirementSummary>;
 export interface SchemaContext {
   allowed_entity_types: string[];
   class_requirements?: ClassRequirementsSummary;
+  /** Source column names per `# File:` name in rml_mapping -- the only valid rml:reference/{column} values. */
+  source_columns?: Record<string, string[]>;
 }
 
 export type RepairType =

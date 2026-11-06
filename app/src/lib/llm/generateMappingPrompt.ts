@@ -131,6 +131,7 @@ Rules:
 - For properties that take a literal, create a "literal" node and set literal_type to exactly the datatype URI declared for that property in the ontology reference.
 - Do not invent classes or properties outside the given ontology reference.
 - Only create edges for column references that correspond to a property of the class you chose; you do not need to map every column.
+- Every "literal" and "uri_ref" node must be the target of an edge. If no ontology property links a column to the entity, leave that column out instead of creating an unconnected node.
 - Only use "$(ColumnName)" placeholders where ColumnName is exactly one of the given references. Never invent column names.
 - Prefer to reuse existing ontology classes/properties when given. Only invent new URIs (using the given prefixes as a base) if nothing suitable exists in the ontology reference.
 - Use example_rows only to judge each column's actual content and format (e.g. to pick a sensible XSD datatype, or to see whether a column looks empty/unstable and so unsuitable as part of the uri_pattern) -- never copy an example value itself into a template.

@@ -7,6 +7,7 @@ import {
 } from '@/lib/api/mapping_service/types';
 import { DataFactory, Parser, Quad_Subject, Store, Term } from 'n3';
 import { v4 as uuidv4 } from 'uuid';
+import { layoutMappingGraph } from './layoutMappingGraph';
 
 const { namedNode } = DataFactory;
 
@@ -36,10 +37,6 @@ const GREL_FIND_PARAM = 'http://users.ugent.be/~bjdmeest/function/grel.ttl#p_str
 const GREL_REPLACE_PARAM = 'http://users.ugent.be/~bjdmeest/function/grel.ttl#p_string_replace';
 
 const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
-
-const GRID_COLUMNS = 4;
-const X_SPACING = 320;
-const Y_SPACING = 160;
 
 export class RmlParseError extends Error {}
 
@@ -300,16 +297,8 @@ export function parseRmlToMappingGraph(
   const nodes: (MappingNode | MappingLiteral | MappingURIRef)[] = [];
   const edges: MappingEdge[] = [];
   const createdEntityNodes = new Map<string, MappingNode>();
-  let gridIndex = 0;
-
-  const nextPosition = () => {
-    const position = {
-      x: (gridIndex % GRID_COLUMNS) * X_SPACING,
-      y: Math.floor(gridIndex / GRID_COLUMNS) * Y_SPACING,
-    };
-    gridIndex++;
-    return position;
-  };
+  // Placeholder; real positions come from layoutMappingGraph below.
+  const nextPosition = () => ({ x: 0, y: 0 });
 
   const materializeEntity = (entity: BuiltEntity): MappingNode => {
     const existingNode = createdEntityNodes.get(entity.id);
@@ -379,12 +368,12 @@ export function parseRmlToMappingGraph(
     sourceNode.properties = Array.from(properties);
   }
 
-  return {
+  return layoutMappingGraph({
     uuid: existing.uuid,
     name: existing.name,
     description: existing.description,
     source_id: existing.source_id,
     nodes,
     edges,
-  };
+  });
 }

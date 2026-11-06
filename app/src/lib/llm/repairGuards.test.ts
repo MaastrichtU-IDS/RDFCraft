@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getAllowedRepairTypes } from './repairGuards';
+import { getAllowedRepairTypes, losesSubjects } from './repairGuards';
 import { Stage1Output } from './repairTypes';
 
 function stage1(constraintComponent: string): Stage1Output {
@@ -62,5 +62,30 @@ describe('getAllowedRepairTypes', () => {
 
   test('unlisted constraint component allows no operation (fail safe)', () => {
     expect(getAllowedRepairTypes(stage1('PatternConstraintComponent'))).toEqual([]);
+  });
+});
+
+describe('losesSubjects', () => {
+  const before = `
+<http://example.org/person/1> a <http://xmlns.com/foaf/0.1/Person> .
+<http://example.org/person/2> a <http://xmlns.com/foaf/0.1/Person> .
+`;
+
+  test('flags a candidate graph that drops subjects (e.g. a patch that broke the subject map)', () => {
+    expect(losesSubjects(before, '')).toBe(true);
+    expect(losesSubjects(before, '<http://example.org/person/1> a <http://xmlns.com/foaf/0.1/Person> .')).toBe(true);
+  });
+
+  test('allows adding triples or renaming subjects (change_subject_key)', () => {
+    expect(
+      losesSubjects(before, `${before}<http://example.org/person/1> <http://xmlns.com/foaf/0.1/name> "A" .`),
+    ).toBe(false);
+    expect(
+      losesSubjects(
+        before,
+        `<http://example.org/p/a> a <http://xmlns.com/foaf/0.1/Person> .
+<http://example.org/p/b> a <http://xmlns.com/foaf/0.1/Person> .`,
+      ),
+    ).toBe(false);
   });
 });

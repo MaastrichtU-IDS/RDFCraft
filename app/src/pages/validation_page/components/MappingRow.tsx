@@ -14,9 +14,10 @@ import ViolationList from './ViolationList';
 
 interface MappingRowProps {
   mapping: MappingGraph;
+  defaultExpanded?: boolean;
 }
 
-const MappingRow = ({ mapping }: MappingRowProps) => {
+const MappingRow = ({ mapping, defaultExpanded = false }: MappingRowProps) => {
   const perMapping = useValidationPageState(
     state => state.perMapping[mapping.uuid],
   );
@@ -36,7 +37,7 @@ const MappingRow = ({ mapping }: MappingRowProps) => {
     state => state.applyRepairedMapping,
   );
 
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [maxIterations, setMaxIterations] = useState(10);
 
   const isLoading = perMapping?.isLoading ?? null;

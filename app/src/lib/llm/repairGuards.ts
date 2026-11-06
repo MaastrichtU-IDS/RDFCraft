@@ -1,3 +1,4 @@
+import { Parser } from 'n3';
 import { RepairType, Stage1Output } from './repairTypes';
 
 /**
@@ -32,4 +33,21 @@ const ALLOWED_REPAIR_TYPES_BY_CONSTRAINT_COMPONENT: Record<string, RepairType[]>
 
 export function getAllowedRepairTypes(stage1: Stage1Output): RepairType[] {
   return ALLOWED_REPAIR_TYPES_BY_CONSTRAINT_COMPONENT[stage1.constraint_component] ?? [];
+}
+
+function distinctSubjectCount(ttl: string): number {
+  const quads = new Parser({ format: 'text/turtle' }).parse(ttl);
+  return new Set(quads.map(quad => quad.subject.value)).size;
+}
+
+/**
+ * True if the candidate knowledge graph has fewer distinct subjects than the
+ * current one. Acceptance is judged by violation COUNT, and a graph with no
+ * focus nodes trivially has zero violations -- so a patch that breaks the
+ * RML (e.g. drops a TriplesMap's subject map) would otherwise look like a
+ * perfect fix. None of the repair operations legitimately removes resources:
+ * change_subject_key renames subjects, but keeps (or raises) their count.
+ */
+export function losesSubjects(currentTtl: string, candidateTtl: string): boolean {
+  return distinctSubjectCount(candidateTtl) < distinctSubjectCount(currentTtl);
 }
