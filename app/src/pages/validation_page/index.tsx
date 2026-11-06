@@ -9,7 +9,7 @@ import {
   NumericInput,
 } from '@blueprintjs/core';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import IterationLog from './components/IterationLog';
 import MappingRow from './components/MappingRow';
 import ViolationList from './components/ViolationList';
@@ -23,6 +23,9 @@ type ValidationPageUrlProps = {
 const ValidationPage = () => {
   const { uuid } = useParams<ValidationPageUrlProps>();
   const navigation = useNavigate();
+  // Set when opened from the mapping editor's Validate button.
+  const [searchParams] = useSearchParams();
+  const focusMappingUuid = searchParams.get('mapping');
 
   const workspace = useValidationPageState(state => state.workspace);
   const shapeSets = useValidationPageState(state => state.shapeSets);
@@ -44,6 +47,9 @@ const ValidationPage = () => {
     state => state.setSelectedShapeSetId,
   );
   const runValidation = useValidationPageState(state => state.runValidation);
+  const runValidationForMapping = useValidationPageState(
+    state => state.runValidationForMapping,
+  );
   const runAutoRepair = useValidationPageState(state => state.runAutoRepair);
   const cancelAutoRepair = useValidationPageState(
     state => state.cancelAutoRepair,
@@ -55,10 +61,13 @@ const ValidationPage = () => {
   const [maxIterations, setMaxIterations] = useState(10);
 
   useEffect(() => {
-    if (uuid) {
-      loadWorkspace(uuid);
-    }
-  }, [uuid, loadWorkspace]);
+    if (!uuid) return;
+    loadWorkspace(uuid).then(() => {
+      if (focusMappingUuid && useValidationPageState.getState().shapeSets.length > 0) {
+        runValidationForMapping(focusMappingUuid);
+      }
+    });
+  }, [uuid, focusMappingUuid, loadWorkspace, runValidationForMapping]);
 
   useErrorToast(error);
 
@@ -164,7 +173,11 @@ const ValidationPage = () => {
             <div className='validation-page-per-table'>
               <H5>Per-Table Validation &amp; Repair</H5>
               {mappings.map(mapping => (
-                <MappingRow key={mapping.uuid} mapping={mapping} />
+                <MappingRow
+                  key={mapping.uuid}
+                  mapping={mapping}
+                  defaultExpanded={mapping.uuid === focusMappingUuid}
+                />
               ))}
             </div>
             <div className='validation-page-row'>
