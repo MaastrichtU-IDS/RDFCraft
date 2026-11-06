@@ -1,0 +1,6 @@
+id,first_name,last_name,nickname,email,homepage,age,knows_id,organization
+1,Alice,Johnson,ali,alice@example.org,https://alice.example.org,34,2,Acme Labs
+2,Bob,Smith,bobby,bob@example.org,https://bob.example.org,41,3,Acme Labs
+3,Carol,Nguyen,caro,carol@example.org,https://carol.example.org,29,1,Globex
+4,David,Okafor,dave,david@example.org,https://david.example.org,52,2,Initech
+5,Eva,Rossi,evi,eva@example.org,https://eva.example.org,38,4,Globex

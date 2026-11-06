@@ -24,6 +24,14 @@ single executable using Nuitka.
 
 - **Multiple RML formats**: It generates both YARRRML and RML mappings.
 
+- **AI Mapping Assistant**: Generates a mapping from your source and ontology
+  with an LLM, validates it against your SHACL shapes and auto-repairs
+  violations.
+
+### AI Mapping Assistant 🤖
+
+![AI Mapping Assistant: generate, validate and auto-repair a FOAF mapping](imgs/ai-mapping-demo.gif)
+
 ## Requirements 📦
 
 - Latest Java Runtime Environment (JRE) or Java Development Kit (JDK) to use the
